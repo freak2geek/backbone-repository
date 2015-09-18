@@ -20,6 +20,8 @@
 
 	Backbone.Syncer.VERSION =  '<%= version %>';
 
+	// @include ../../tmp/backbone.jsonify.bare.js
+
 	// @include ../dao/localstorage.js
 
 	// @include ../backbone.syncer.js

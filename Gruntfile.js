@@ -1,3 +1,6 @@
+var path = require('path');
+var unwrap = require('unwrap');
+
 /*global module:false */
 module.exports = function (grunt) {
 	'use strict';
@@ -52,20 +55,6 @@ module.exports = function (grunt) {
 				dest: 'lib/<%= pkg.name %>.js'
 			}
 		},
-		jshint: {
-			options: {
-				jshintrc: '.jshintrc'
-			},
-			gruntfile: {
-				src: 'Gruntfile.js'
-			},
-			source: {
-				src: ['<%= concat.lib.dest %>']
-			},
-			test: {
-				src: ['test/**/*.js']
-			}
-		},
 		tape: {
 			options: {
 				pretty: true,
@@ -95,7 +84,31 @@ module.exports = function (grunt) {
 				files: ['<%= jshint.test.src %>', '<%= qunit.files %>'],
 				tasks: ['jshint:test', 'qunit']
 			}
+		},
+		unwrap: {
+			"backbone.jsonify": {
+				src:	'./node_modules/backbone.jsonify/lib/backbone.jsonify.js',
+				dest:	'./tmp/backbone.jsonify.bare.js'
+			}
 		}
+	});
+	
+	grunt.registerMultiTask('unwrap', 'Unwrap UMD', function () {
+		var done = this.async();
+		var timesLeft = 0;
+
+		this.files.forEach(function (file) {
+			file.src.forEach(function (src) {
+				timesLeft++;
+				unwrap(path.resolve(__dirname, src), function (err, content) {
+					if (err) return grunt.log.error(err);
+					grunt.file.write(path.resolve(__dirname, file.dest), content);
+					grunt.log.ok(file.dest + ' created.');
+					timesLeft--;
+					if (timesLeft <= 0) done();
+				});
+			});
+		});
 	});
 
 	// Grunt-Contrib Tasks
@@ -106,7 +119,7 @@ module.exports = function (grunt) {
 	});
 
 	// Default task.
-	grunt.registerTask('default', ['clean', 'preprocess', 'template', 'concat', 'jshint', 'tape', 'uglify']);
+	grunt.registerTask('default', ['unwrap', 'clean', 'preprocess', 'template', 'concat', 'tape', 'uglify']);
 	// Test task.
 	grunt.registerTask('test', ['tape']);
 

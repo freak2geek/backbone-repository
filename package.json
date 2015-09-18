@@ -22,7 +22,8 @@
     "underscore": "^1.8.3",
     "backbone": "^1.2.1",
     "tape": "~2.4.2",
-    "faucet": "0.0.0"
+    "faucet": "0.0.0",
+    "backbone.jsonify": "git://github.com/Gywem/Backbone.Jsonify.git"
   },
   "devDependencies": {
     "grunt": "~0.4.1",
