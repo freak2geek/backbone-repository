@@ -23,6 +23,7 @@
     "backbone": "^1.2.1",
     "tape": "~2.4.2",
     "faucet": "0.0.0",
+    "najax": "",
     "backbone.jsonify": "git://github.com/Gywem/Backbone.Jsonify.git"
   },
   "devDependencies": {

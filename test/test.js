@@ -1,10 +1,17 @@
 var _ = require('underscore');
-var Backbone = require('backbone');
+var Backbone = require('backbone'),
+    najax = require('najax');
+
+Backbone.ajax = najax;
 
 require('../lib/backbone.syncer');
 
-var User = Backbone.Model.extend();
-var Users = Backbone.Collection.extend();
+var User = Backbone.Model.extend({	
+	url: "http://www.example.com/"
+});
+var Users = Backbone.Collection.extend({	
+	url: "http://www.example.com/"
+});
 
 var test = function(name, options, callback) {
   if (_.isFunction(options)) {
@@ -107,21 +114,22 @@ test('Fetch method on Model.', function (t) {
 		id: 1
 	});
 
-	t.ok(!user.isFetched(), "User is not fetched yet.");
+	t.ok(!user.isFetched(), 
+		"User is not fetched yet.");
 
 	user.fetch({
 		mode: "infinite",
 		error: function (model, response, options) {
-			options.success({});
+			options.success();
+			t.ok(user.isFetched(), 
+				"User has been fetched by infinite mode.");
 
-			t.ok(user.isFetched(), "User has been fetched by infinite mode.");
-		}
-	});
-
-	user.fetch({
-		mode: "infinite",
-		success: function (model, response, options) {
-			t.pass("User has been previously fetched. No server call needed.");
+			user.fetch({
+				mode: "infinite",
+				success: function (model, response, options) {
+					t.pass("User has been previously fetched. No server call needed.");
+				}
+			});
 		}
 	});
 
@@ -182,11 +190,12 @@ test('Destroy method on Model.', function (t) {
 });
 
 test('Dirtied attributes are set.', function (t) {
-	var user = User.create({
-		id: 1
-	});
+	var user = User.create();
 
-	t.ok(!user.hasDirtied(), "No dirty changes yet.");
+	t.same(user.dirtiedAttributes(), {});
+
+	t.ok(!user.hasDirtied(), 
+		"No dirty changes yet.");
 
 	user.set({
 		name: "Nacho"
@@ -196,7 +205,8 @@ test('Dirtied attributes are set.', function (t) {
 		age: 26
 	});
 
-	t.ok(user.hasDirtied(), "Dirty changes has been set.");
+	t.ok(user.hasDirtied(), 
+		"Dirty changes has been set.");
 
 	t.same(user.dirtiedAttributes(), {
 		name: "Nacho",
@@ -214,31 +224,37 @@ test('Dirtied attributes are cleaned on server successful response.', function (
 	});
 
 	user.save({
-		name: "Nacho"
+		name: "Nacho",
+		surname: "Codoñer"
 	}, {
 		error: function (model, response, options) {
-			options.success({});
+			t.same(user.dirtiedAttributes(), {
+				name: "Nacho",
+				surname: "Codoñer",
+				age: 26
+			}, "Name, surname and age are dirtied attributes.");
+
+			model.set({
+				surname: "Gil"
+			});
+
+			options.success();
 
 			t.same(user.dirtiedAttributes(), {
-				age: 26
-			}, "Age attribute is dirtied. Name is not as it has been successfully saved.");
+				age: 26,
+				surname: "Gil"
+			}, "Age and surname attribute are dirtied. Name is not as it has been successfully saved.");
 		}
 	});
 
 	user.set({
 		age: 26
 	});
-
-	user.save({}, {
-		error: function (model, response, options) {
-			options.success({});
-
-			t.ok(!user.hasDirtied(), "No more dirtied attributes. Age has been synchronized.");
-		}
-	});
 });
 
-test('Destroy flag is set and the model is remained in local cache.', function (t) {
+test('Destroyed flag is set and the model is remained in local cache.', function (t) {
+	t.plan(3);
+
 	var user = User.create({
 		id: 1
 	});
@@ -248,12 +264,12 @@ test('Destroy flag is set and the model is remained in local cache.', function (
 	user.destroy({
 		mode: "client",
 		success: function (model, response, options) {
-			t.ok(user.isDirtyDestroyed(), "User has been marked as dirty to be destroyed.");
-			t.ok(User.find(model), "User is still in the local cache.");
+			t.ok(user.isDirtyDestroyed(), 
+				"User has been marked as dirty to be destroyed.");
+			t.ok(User.find(model), 
+				"User is still in the local cache.");
 		}
 	});
-
-	t.end();
 });
 
 test('A destroyed model is earsed from local cache on server successful response.', function (t) {
@@ -265,8 +281,11 @@ test('A destroyed model is earsed from local cache on server successful response
 
 	user.destroy({
 		mode: "server",
-		success: function (model, response, options) {
-			t.ok(user.isDestroyed(), "User has been destroyed.");
+		error: function (model, response, options) {
+			options.success();
+
+			t.ok(user.isDestroyed(), 
+				"User has been destroyed.");
 		}
 	});
 });
@@ -280,45 +299,61 @@ test('Pull method on Model.', function (t) {
 
 	user.pull({
 		error: function (model, response, options) {
-			options.success({});
+			options.success();
 
-			t.ok(user.isFetched(), "User is fetched.");
+			t.ok(user.isFetched(), 
+				"User is fetched.");
 		}
 	});
 });
 
 test('Push method on Model.', function (t) {
-	t.plan(2);
+	t.plan(4);
 	
 	var user = User.create({
-		id: 1
-	});
-
-	user.set({
 		name: "Nacho"
 	});
 
 	user.push({
 		error: function (model, response, options) {
-			options.success({});
+			options.success({
+				id: 1
+			});
 
-			t.ok(!user.hasDirtied(), "User has synchronized dirtied changes.");
-		}
-	});
+			t.ok(!user.isNew(), 
+				"User has been created remotely.");
+			t.ok(!user.hasDirtied("name"), 
+				"Name is no longer a dirty attribute.");
 
-	user.trigger("destroy");
+			user.set({
+				surname: "Codoñer"
+			});
 
-	user.push({
-		error: function (model, response, options) {
-			options.success({});
+			user.push({
+				error: function (model, response, options) {
+					options.success();
 
-			t.ok(user.isDestroyed(), "User has been deleted.");
+					t.ok(!user.hasDirtied(), 
+						"User has synchronized dirtied changes.");
+				}
+			});
+
+			user.trigger("destroy", user);
+
+			user.push({
+				error: function (model, response, options) {
+					options.success();
+
+					t.ok(user.isDestroyed(), 
+						"User has been destroyed remotely.");
+				}
+			});
 		}
 	});
 });
 
 test('Fetch method on Collection.', function (t) {
-	t.plan(5);
+	t.plan(2);
 
 	var user = User.create({
 		id: 1
@@ -331,15 +366,8 @@ test('Fetch method on Collection.', function (t) {
 	var users = new Users([user, user2]);
 
 	users.fetch({
-		error: function (model, response, options) {
-			t.ok(model instanceof Backbone.Model, "Models fetched separately as no url provided.");
-		}
-	});
-
-	users.fetch({
-		url: "http://www.example.com/",
 		error: function (collection, response, options) {
-			t.ok(collection instanceof Backbone.Collection, "Models fetched once for all as url provided.");
+			options.success();
 
 			users.each(function (model) {
 				t.ok(model.isFetched(), "Model is fetched.");
@@ -351,25 +379,17 @@ test('Fetch method on Collection.', function (t) {
 test('Save method on Collection.', function (t) {
 	t.plan(5);
 
-	var user = User.create();
-
 	var user2 = User.create({
-		id: 2
+		id: 2,
+		name: "Nacho"
 	});
 
-	var users = new Users([user, user2]);
+	var users = new Users();
 
-	users.save({
-		error: function (model, response, options) {
-			t.ok(model instanceof Backbone.Model, "Models saved separately as no url provided.");
-		}
-	});
-
-	users.save({
-		url: "http://www.example.com/",
+	users.save([{
+		name: "Jose"
+	}, user2], {
 		error: function (models, collection, response, options) {
-			t.ok(collection instanceof Backbone.Collection, "Models saved once for all as url provided.");
-
 			switch(options.method) {
 				case "create":
 					options.success([
@@ -377,17 +397,17 @@ test('Save method on Collection.', function (t) {
 					]);
 
 					_.each(models, function(model) {
-						t.ok(!model.isNew(), "User has been created.");
+						t.ok(!model.isNew(), 
+							"User has been created.");
 					});
 					break;
 
 				case "update":
-					options.success([
-						{name: "Nacho"}
-					]);
+					options.success();
 
 					_.each(models, function(model) {
-						t.same(model.get("name"), "Nacho", "User2 has been updated.");
+						t.same(model.get("name"), "Nacho",
+							"User2 has been updated.");
 					});
 					break;
 
@@ -395,34 +415,42 @@ test('Save method on Collection.', function (t) {
 		}
 	});
 
-	user.set({
-		age: 26
-	});
-
-	users.save({
+	users.save([{
+		id: 1,
+		surname: "Codoñer"
+	}], {
 		patch: true,
-		url: "http://www.example.com/",
+		wait: true,
+		remove: false,
 		error: function (models, collection, response, options) {
-			options.success([]);
-
 			switch(options.method) {
-				case "patch":					
-					t.same(options.attrs[0], {
-						age: 26
-					}, "Only dirty attributes has been sent");
+				case "patch":
+					_.each(models, function(model) {
+						t.ok(model.get("surname") !== "Codoñer",
+							"Surname has to wait successful request to be updated.");
+					});
+
+					t.same(options.attrs, [{
+						id: 1,
+						surname: "Codoñer"
+					}], "Only set attributes are sent.");
+
+					options.success();
 
 					_.each(models, function(model) {
-						t.same(!model.hasDirtied(), "Models has cleaned dirty changes.");
+						t.same(model.get("surname"), "Codoñer",
+							"Surname has been updated.");
 					});
 					break;
 
 			}
 		}
 	});
+
 });
 
 test('Destroy method on Collection.', function (t) {
-	t.plan(5);
+	t.plan(3);
 
 	var user = User.create({
 		id: 1
@@ -435,20 +463,13 @@ test('Destroy method on Collection.', function (t) {
 	var users = new Users([user, user2]);
 
 	users.destroy({
-		error: function (model, response, options) {
-			t.ok(model instanceof Backbone.Model, "Models destroyed separately as no url provided.");
-		}
-	});
-
-	users.destroy({
 		url: "http://www.example.com/",
 		error: function (collection, response, options) {
-			t.ok(collection instanceof Backbone.Collection, "Models destroyed once for all as url provided.");
-
-			options.success({});
+			options.success();
 
 			users.each(function (model) {
-				t.ok(model.isDestroyed(), "Model has been destroyed.");
+				t.ok(model.isDestroyed(), 
+					"Model has been destroyed.");
 			});
 		}
 	});
@@ -468,10 +489,16 @@ test('Pull method on Collection.', function (t) {
 	var users = new Users([user, user2]);
 
 	users.pull({
-		error: function (model, response, options) {
-			options.success({});
+		url: "http://www.example.com/",
+		error: function (models, collection, response, options) {
+			options.success([
+				{id: 1}, {id: 2}
+			]);
 
-			t.ok(model.isFetched(), "Model has been fetched.");
+			users.each(function (model) {
+				t.ok(model.isFetched(), 
+					"Model has been fetched.");
+			});
 		}
 	});
 });
@@ -482,7 +509,7 @@ test('Push method on Collection.', function (t) {
 	var user = User.create();
 
 	var user2 = User.create({
-		id: 2,		
+		id: 2,
 		name: "Nacho"
 	});
 
@@ -495,6 +522,7 @@ test('Push method on Collection.', function (t) {
 	user3.trigger("destroy");
 
 	users.push({
+		url: "http://www.example.com/",
 		error: function (models, collection, response, options) {			
 			switch(options.method) {
 				case "create":
@@ -503,23 +531,26 @@ test('Push method on Collection.', function (t) {
 					]);
 
 					_.each(models, function(model) {
-						t.ok(!model.isNew(), "User has been created.");
+						t.ok(!model.isNew(), 
+							"User has been created.");
 					});
 					break;
 
 				case "patch":
-					options.success([]);
+					options.success();
 
 					_.each(models, function(model) {
-						t.same(!model.hasDirtied(), "User2 has synchronized dirtied changes.");
+						t.same(!model.hasDirtied(), 
+							"User2 has synchronized dirtied changes.");
 					});
 					break;
 
 				case "destroy":
-					options.success([]);
+					options.success();
 
 					_.each(models, function(model) {
-						t.same(model.isDestroyed(), "User3 has been destroyed.");
+						t.same(model.isDestroyed(), 
+							"User3 has been destroyed.");
 					});
 					break;
 
