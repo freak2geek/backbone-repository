@@ -35,6 +35,7 @@ Resets the local cache collection of the model.
     * *server*. 
 
         Fetches the model remotely.
+  * **options.localStorage** {Boolean|Object} Whether or not use LocalStorage or Locally options.
 
 ##### model.save(attrs, [options])
 * **options** {Object} Options for the save call.
@@ -45,6 +46,7 @@ Resets the local cache collection of the model.
     * *server*. 
 
         Updates the model both locally and remotely.
+  * **options.localStorage** {Boolean|Object} Whether or not use LocalStorage or Locally options.
 
 ##### model.destroy([options])
 * **options** {Object} Options for the destroy call.
@@ -55,6 +57,26 @@ Resets the local cache collection of the model.
     * *server*. 
 
         Deletes the model both locally and remotely.
+  * **options.localStorage** {Boolean|Object} Whether or not use LocalStorage or Locally options.
+
+##### model.pull([options])
+* **options** {Object} Options for the fetch call.
+  * **options.localStorage** {Boolean|Object} Whether or not use LocalStorage or Locally options.
+
+Fetches the model if it has not been fetched before.
+
+##### model.push([options])
+* **options** {Object} Options for the remote calls.
+  * **options.localStorage** {Boolean|Object} Whether or not use LocalStorage or Locally options.
+
+Pushes the changes performed to the model; create, update or destroy. In case you wish to distingish which call was finished in remote callbacks, an option "method" is passed.
+``` javascript
+model.push({
+  success: function (model, response, options) {
+    // options.method ["create"|"update"|"patch"|"destroy"]
+  }
+})
+```
 
 ##### model.isFetched()
 
@@ -72,23 +94,6 @@ Returns 'true' in case the model changed since its last sever synchronization, '
 ##### model.isDirtyDestroyed()
 
 Returns 'true' if this model has been destroyed locally, 'false' otherwise.
-
-##### model.pull([options])
-* **options** {Object} Options for the fetch call.
-
-Fetches the model if it has not been fetched before.
-
-##### model.push([options])
-* **options** {Object} Options for the remote calls.
-
-Pushes the changes performed to the model; create, update or destroy. In case you wish to distingish which call was finished in remote callbacks, an option "method" is passed.
-``` javascript
-model.push({
-  success: function (model, response, options) {
-    // options.method ["create"|"update"|"patch"|"destroy"]
-  }
-})
-```
 
 ## Building and Testing
 First install locally all the required development dependencies.
