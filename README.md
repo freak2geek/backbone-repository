@@ -88,7 +88,7 @@ Returns 'true' if this model has been fetched remotely, 'false' otherwise.
 
 Retrieves a copy of the attributes that have changed since the last server synchronization.
 
-##### model.hasDirtied(attr)
+##### model.hasDirtied([attr])
 * **attr** {String} The attribute to check if has been changed.
 
 Returns 'true' in case the model changed since its last sever synchronization, 'false' otherwise.
