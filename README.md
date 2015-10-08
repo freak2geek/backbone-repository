@@ -4,7 +4,7 @@ Backbone helper that alters and add manager methods to Backbone Model and Collec
 
 ## Table of Contents
   *generated with [DocToc](http://doctoc.herokuapp.com/)*
-- [Usage](#)
+- [Usage](#Usage)
 	- [Backbone.Model](#)
 		- [Class methods](#)
 			- [Model.create(attrs, [options])](#)
