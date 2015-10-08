@@ -2,6 +2,8 @@
 
 Backbone helper that alters and add manager methods to Backbone Model and Collection. Provides a local cache to track models and supports LocalStorage.
 
+## Table of Contents
+
 ## Usage
 ### Backbone.Model
 #### Class methods
