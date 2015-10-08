@@ -30,7 +30,7 @@ Resets the local cache collection of the model.
 
 ##### model.fetch([options])
 * **options** {Object} Options for the fetch call.
-  * **options.mode** {String} [default:infinite]
+  * **options.mode** {String} [default:server]
 	  * *infinite*. 
 	  
         Fetches the model locally if exists. Otherwise, remotelly.
