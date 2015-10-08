@@ -1,6 +1,6 @@
 # Backbone.Syncer
 
-Backbone helper that alters and add manager methods to Backbone Model and Collection. Provides a local cache to track models and supports LocalStorage.
+Backbone helper that alters and add manager methods to Backbone Model and Collection. Provides a local cache to track models and supports LocalStorage. For managing the LocalStorage, [Locally](https://github.com/ozantunca/locally) plugin is included in the library.
 
 ## Table of Contents
 
@@ -110,6 +110,13 @@ Returns 'true' in case the model changed since its last sever synchronization, '
 ##### model.isDirtyDestroyed()
 
 Returns 'true' if this model has been destroyed locally, 'false' otherwise.
+
+## Compatibility and Requirements
+* jQuery
+* Underscore.js
+* Backbone
+* Backbone.Jsonify
+* Locally
 
 ## Building and Testing
 First install locally all the required development dependencies.
