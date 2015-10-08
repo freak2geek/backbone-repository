@@ -5,8 +5,22 @@ Backbone helper that alters and add manager methods to Backbone Model and Collec
 ## Table of Contents
 
 ## Usage
+### Backbone.Syncer
+
+#### storagePrefix
+
+{String} Prefix that will be used for all data to store.
+
+#### compressStorage
+
+{Boolean} [default:false] Whether or not use compression in the storage.
+
+#### storage()
+
+Returns the Locally Store. Take a look to its [API](https://github.com/ozantunca/locally). 
+
 ### Backbone.Model
-#### Class methods
+#### Class properties and methods
 ##### Model.create(attrs, [options])
 * **attrs** {Object} Attributes for the new instance.
 * **options** {Object} Options for the new instance.
@@ -26,7 +40,7 @@ Returns the collection that represents the local cache of the model.
 
 Resets the local cache collection of the model.
 
-#### Instance methods
+#### Instance properties and methods
 
 ##### model.fetch([options])
 * **options** {Object} Options for the fetch call.
@@ -37,7 +51,7 @@ Resets the local cache collection of the model.
     * *server*. 
 
         Fetches the model remotely.
-  * **options.localStorage** {Boolean|Object} Whether or not use LocalStorage or Locally options.
+  * **options.localStorage** {Boolean} Whether or not use LocalStorage.
 
 ##### model.save(attrs, [options])
 * **options** {Object} Options for the save call.
@@ -59,17 +73,17 @@ Resets the local cache collection of the model.
     * *server*. 
 
         Deletes the model both locally and remotely.
-  * **options.localStorage** {Boolean|Object} Whether or not use LocalStorage or Locally options.
+  * **options.localStorage** {Boolean|Object} Whether or not use LocalStorage.
 
 ##### model.pull([options])
 * **options** {Object} Options for the fetch call.
-  * **options.localStorage** {Boolean|Object} Whether or not use LocalStorage or Locally options.
+  * **options.localStorage** {Boolean} Whether or not use LocalStorage.
 
 Fetches the model if it has not been fetched before.
 
 ##### model.push([options])
 * **options** {Object} Options for the remote calls.
-  * **options.localStorage** {Boolean|Object} Whether or not use LocalStorage or Locally options.
+  * **options.localStorage** {Boolean} Whether or not use LocalStorage.
 
 Pushes the changes performed to the model; create, update or destroy. In case you wish to distingish which call was finished in remote callbacks, an option "method" is passed.
 ``` javascript
