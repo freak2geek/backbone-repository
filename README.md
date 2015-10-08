@@ -3,6 +3,30 @@
 Backbone helper that alters and add manager methods to Backbone Model and Collection. Provides a local cache to track models and supports LocalStorage.
 
 ## Table of Contents
+  *generated with [DocToc](http://doctoc.herokuapp.com/)*
+- [Usage](#)
+	- [Backbone.Model](#)
+		- [Class methods](#)
+			- [Model.create(attrs, [options])](#)
+			- [Model.find(attrs)](#)
+			- [Model.all()](#)
+			- [Model.reset()](#)
+		- [Instance methods](#)
+			- [model.fetch([options])](#)
+			- [model.save(attrs, [options])](#)
+			- [model.destroy([options])](#)
+			- [model.pull([options])](#)
+			- [model.push([options])](#)
+			- [model.isFetched()](#)
+			- [model.dirtiedAttributes()](#)
+			- [model.hasDirtied(attr)](#)
+			- [model.isDirtyDestroyed()](#)
+- [Building and Testing](#)
+	- [Building](#)
+	- [Testing](#)
+- [Contributing](#)
+- [Release History](#)
+- [License](#)
 
 ## Usage
 ### Backbone.Model
