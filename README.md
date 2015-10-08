@@ -111,6 +111,10 @@ Returns 'true' in case the model changed since its last sever synchronization, '
 
 Returns 'true' if this model has been destroyed locally, 'false' otherwise.
 
+##### model.isDestroyed()
+
+Returns 'true' if this model has been destroyed remotely, 'false' otherwise.
+
 ## Compatibility and Requirements
 * jQuery
 * Underscore.js
