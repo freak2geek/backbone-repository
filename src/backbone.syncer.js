@@ -14,17 +14,17 @@ var previousSave = Backbone.Model.prototype.save;
 Backbone.Model = Backbone.Model.extend({
 
 	/**
-	 * @property {string} [cidAttribute="cid"] The attribute to store 
+	 * @property {string} [cidAttribute="cid"] The attribute to store
 	 * the cid in for lookup.
 	 */
-    cidAttribute: 'cid',
+  cidAttribute: 'cid',
 
 	constructor: function () {
 		// The constructor is defined for ensuring to create
 		// the instance without loosing neither the initialization
 		// logic required by this library nor customized by the user.
 		if(this.initialize !== Backbone.Model.prototype.initialize) {
-			var self = this;  
+			var self = this;
 			var overridedInit = this.initialize;
 
 			// Composes new initialize method that contains
@@ -36,15 +36,18 @@ Backbone.Model = Backbone.Model.extend({
 		}
 
 		return Model.apply(this, arguments);
-    },
+  },
 
-    initialize: function () {
-    	var self = this;
+  initialize: function () {
+  	var self = this;
 
-    	this._fetched = false;
-    	this.dirtied = {};
-    	this._dirtyDestroyed = false;
-    	this._destroyed = false;
+  	this._fetched = false;
+  	this.dirtied = {};
+  	this._dirtyDestroyed = false;
+  	this._destroyed = false;
+
+    // Saving dirty attributes
+    _.extend(this.dirtied, _.omit(this.attributes, [this.idAttribute, this.cidAttribute]));
 
 		// Use `"cid"` for retrieving models by `attributes.cid`.
 		this.set(this.cidAttribute, this.cid);
@@ -127,8 +130,8 @@ Backbone.Model = Backbone.Model.extend({
 
 		previousSet.call(this, attrs, options);
 
-		if(!options.mode || options.mode !== "server") {
-			_.extend(this.dirtied, _.omit(attrs, "cid"));
+		if(!options.mode || options.mode === "client") {
+			_.extend(this.dirtied, _.omit(attrs, [this.idAttribute, this.cidAttribute]));
 		}
 
 		return this;
@@ -163,11 +166,11 @@ Backbone.Model = Backbone.Model.extend({
 
 		options || (options = {});
 
-		if(_.isEmpty(attrs)) {
-			options.changes = _.clone(this.attributes);
-		}
-
-		options.changes = attrs;
+    if(options.patch) {
+      options.changes = attrs;
+    } else {
+      options.changes = _.extend(_.clone(this.attributes), attrs);
+    }
 
 		return previousSave.apply(this, [key, val, options]);
 	},
@@ -195,12 +198,15 @@ Backbone.Model = Backbone.Model.extend({
 		var options = _.extend(options, {mode: "server"});
 
 		if(this.isDirtyDestroyed()) {
+      // Model is marked as destroyed, but in case is new, it won't be synchronized.
+      if(this.isNew()) return;
 			return this.destroy(options);
 		} else if(this.isNew()) {
+      // Model is new, it will be created remotelly.
 			return this.save({}, options);
 		} else if(this.hasDirtied()) {
-			return this.save(this.dirtiedAttributes(), 
-				_.extend(options, {patch: true}));		
+      // Model has dirtied changes, it will be updated remotelly.
+			return this.save(this.dirtiedAttributes(), options);
 		}
 	}
 
@@ -259,7 +265,7 @@ Backbone.Model = Backbone.Model.extend({
 	},
 
 	/**
-	 * Returns the collection that represents the local cache	 
+	 * Returns the collection that represents the local cache
 	 * of the model.
 	 */
 	all: function () {
@@ -272,7 +278,7 @@ Backbone.Model = Backbone.Model.extend({
 			var all = this._all = new All();
 
 			all.on("destroy", function(model) {
-				if(model.isDirtyDestroyed())
+				if(model.isDirtyDestroyed() && !model.isDestroyed())
 					all.add(model, {silent: true});
 			});
 		}
@@ -288,129 +294,119 @@ Backbone.Model = Backbone.Model.extend({
 	}
 });
 
-Backbone.Collection = Backbone.Collection.extend({
-	save: function (models, options) {
-		if (models == null) return;
-
-		options || (options = {});
-
-		var self = this;
-
-		options = _.extend({validate: true, parse: true}, options);
-		var wait = options.wait;
-	}
-});
-
+Backbone.Collection = Backbone.Collection.extend({});
 
 var serverSync = Backbone.sync;
 
 var Syncer = {};
 Syncer.sync = function (method, model, options) {
-	options || (options = {});
+  options || (options = {});
 
-	options.method = method;
+  options.method = method;
 
-	var mode = (options.mode)? options.mode: 'server';
+  options.mode || (options.mode = 'server');
 
-	if(model instanceof Backbone.Model)
-		switch(method) {
-			case "create":
-			case "update":
-			case "patch":
-				var success = options.success;
+  if(model instanceof Backbone.Model) {
+    return modelSync.apply(this, [method, model, options]);
+  } else if(model instanceof Backbone.Collection) {
+    return collectionSync.apply(this, [method, model, options]);
+  }
 
-				options.success = function (response) {
-					_.each(options.changes, function (attrVal, attrKey) {
-						var dirtiedVal = model.dirtied[attrKey];
+}
 
-						if(dirtiedVal === attrVal)
-							delete model.dirtied[attrKey];
-					});
+function modelSync(method, model, options) {
+  var mode = options.mode;
 
-					if(success) success(response);
-				};
+  switch(method) {
+    case "create":
+    case "update":
+    case "patch":
+      var success = options.success;
 
-				if(mode === "client") {
-					_.defer(options.success);
-					return;
-				}
+      if(mode === "client") {
+        // Client mode.
+        _.defer(success, model, {}, options);
+        return;
+      }
 
-				serverSync.apply(this, [method, model, options]);
-				break;
+      // Server mode.
+      options.success = function (response) {
+        // Marks the model as fetched in case it is a new one.
+        if(method === "create") {
+          model._fetched = true;
+        }
 
-			case "delete":
-				var success = options.success;
+        // Resolves attributes marked as dirtied.
+        _.each(options.changes, function (attrVal, attrKey) {
+          var dirtiedVal = model.dirtied[attrKey];
 
-				options.success = function (response) {
-					if(mode === "server") {
-						model.constructor.all().remove(model);
-						model._destroyed = true;
-					}
+          if(dirtiedVal === attrVal)
+            delete model.dirtied[attrKey];
+        });
 
-					if(success) success(response);
-				};
+        if(success) success.call(options.context, response);
+      };
 
-				if(mode === "client") {
-					_.defer(options.success);
-					return;
-				}
+      return serverSync.apply(this, [method, model, options]);
 
-				serverSync.apply(this, [method, model, options]);
-				break;
+    case "delete":
+      var success = options.success;
 
-			case "read":
-				var success = options.success;
+      if(mode === "client") {
+        // Client mode.
+        _.defer(success, model, {}, options);
+        return;
+      }
 
-				options.success = function (response) {
-					model._fetched = true;
+      // Server mode.
+      options.success = function (response) {
+        if(mode === "server") {
+          model.constructor.all().remove(model);
+          model._destroyed = true;
+        }
 
-					if(success) success(response);
-				};
+        if(success) success(options.context, response);
+      };
 
-				if(mode === "infinite") {
-					if(model.isFetched()) {
-						_.defer(options.success);
-						return;
-					}
-				}
+      return serverSync.apply(this, [method, model, options]);
 
-				serverSync.apply(this, [method, model, options]);
-				break;
+    case "read":
+      var success = options.success;
 
-		}
+      if(mode === "infinite") {
+        // Infinite mode.
+        if(model.isFetched()) {
+          // Model already fetched.
+          _.defer(success, model, {}, options);
+          return;
+        }
+      }
 
-		if(model instanceof Backbone.Collection) {
-			var collection = model;
+      // Server mode & infinite mode with the model not fetched.
+      options.success = function (response) {
+        model._fetched = true;
 
-			switch(method) {
-				case "create":
-				case "update":
-				case "patch":
-					break;
+        if(success) success(options.context, response);
+      };
 
-				case "delete":
-					break;
+      return serverSync.apply(this, [method, model, options]);
 
-				case "read":
-					var success = options.success;
+  }
+}
 
-					options.success = function (response) {
-						collection.each(function (model) {
-							model._fetched = true;
-						});
+function collectionSync(method, collection, options) {
+  var mode = options.mode;
 
-						if(success)
-							success(response);
-					};
-
-					serverSync.apply(this, [method, model, options]);
-					break;
-
-			}
-
-
-		}
-
+  switch(method) {
+    case "create":
+    case "update":
+    case "patch":
+      break;
+    case "delete":
+      break;
+    case "read":
+      break;
+  }
 }
 
 Backbone.sync = Syncer.sync;
