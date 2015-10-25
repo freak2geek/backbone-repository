@@ -337,23 +337,35 @@ Backbone.Collection = Backbone.Collection.extend({
 
   },
 
+  /**
+   * Method to save all models from a collection.
+   *
+   * @param {Object} [options]
+   * @return {Array<Object>} xhrs
+   */
   save: function(options) {
     options || (options = {});
 
     var xhrs = [];
     this.each(function (model) {
-        var xhr = model.save({}, options);
+        var xhr = model.save([], options);
         xhrs.push(xhr);
     });
 
     return xhrs;
   },
 
+  /**
+   * Method to destroy all models from a collection.
+   *
+   * @param {Object} [options]
+   * @return {Array<Object>} xhrs
+   */
   destroy: function(options) {
     options || (options = {});
 
     var xhrs = [];
-    var models = _.extend({}, this.models);
+    var models = _.extend([], this.models);
     _.each(models, function (model) {
       var xhr = model.destroy(options);
       xhrs.push(xhr);
@@ -366,18 +378,24 @@ Backbone.Collection = Backbone.Collection.extend({
    * Fetches the collection models that are not fetched.
    *
    * @param {Object} [options]
-   * @return {Object} xhr
+   * @return {Array<Object>} xhrs
    */
   pull: function(options) {
     options || (options = {});
     return this.fetch(_.extend(options, {mode: "infinite"}));
   },
 
+  /**
+   * Method to push all models from a collection.
+   *
+   * @param {Object} [options]
+   * @return {Array<Object>} xhrs
+   */
   push: function(options) {
     options || (options = {});
 
     var xhrs = [];
-    var models = _.extend({}, this.models);
+    var models = _.extend([], this.models);
     _.each(models, function (model) {
         var xhr = model.push(options);
         xhrs.push(xhr);
