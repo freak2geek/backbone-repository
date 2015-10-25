@@ -135,7 +135,7 @@ Backbone.Model = Backbone.Model.extend({
 		}
 
 		return this;
-    },
+  },
 
 	/**
 	 * @property {boolean} [_destroyed="false"] Flag that means if the model
@@ -172,7 +172,7 @@ Backbone.Model = Backbone.Model.extend({
       options.changes = _.extend(_.clone(this.attributes), attrs);
     }
 
-		return previousSave.apply(this, [key, val, options]);
+		return previousSave.apply(this, [attrs, options]);
 	},
 
 	/**
@@ -294,7 +294,99 @@ Backbone.Model = Backbone.Model.extend({
 	}
 });
 
-Backbone.Collection = Backbone.Collection.extend({});
+var prevInitCollection = Backbone.Collection.prototype.initialize;
+var prevFetchCollection = Backbone.Collection.prototype.fetch;
+
+/**
+ * Enhancements for Backbone.Collection.
+ *
+ * @class Backbone.Collection
+ * @extends Backbone.Collection
+ */
+Backbone.Collection = Backbone.Collection.extend({
+
+  /**
+   * Returns the collection url for specific models
+   * within the collection.
+   *
+   * @param {Array} [ids]
+   * @return {String}
+   */
+  idsUrl: function (ids) {
+    var url = _.result(this, 'url') || urlError();
+    return url+Backbone.Syncer.IDS_URL_SEPARATOR+ids.join(Backbone.Syncer.IDS_SEPARATOR);
+  },
+
+  /**
+   * Alters fetch method to enable infinite mode.
+   */
+  fetch: function(options) {
+    options = _.extend({parse: true}, options);
+
+    var success = options.success;
+
+    var collection = this;
+    options.success = function(resp) {
+      if (success) success.call(options.context, collection, resp, options);
+      collection.trigger('sync', collection, resp, options);
+    };
+
+    wrapError(this, options);
+
+    return this.sync('read', this, options);
+
+  },
+
+  save: function(options) {
+    options || (options = {});
+
+    var xhrs = [];
+    this.each(function (model) {
+        var xhr = model.save({}, options);
+        xhrs.push(xhr);
+    });
+
+    return xhrs;
+  },
+
+  destroy: function(options) {
+    options || (options = {});
+
+    var xhrs = [];
+    var models = _.extend({}, this.models);
+    _.each(models, function (model) {
+      var xhr = model.destroy(options);
+      xhrs.push(xhr);
+    });
+
+    return xhrs;
+  },
+
+  /**
+   * Fetches the collection models that are not fetched.
+   *
+   * @param {Object} [options]
+   * @return {Object} xhr
+   */
+  pull: function(options) {
+    options || (options = {});
+    return this.fetch(_.extend(options, {mode: "infinite"}));
+  },
+
+  push: function(options) {
+    options || (options = {});
+
+    var xhrs = [];
+    var models = _.extend({}, this.models);
+    _.each(models, function (model) {
+        var xhr = model.push(options);
+        xhrs.push(xhr);
+    });
+
+    return xhrs;
+  },
+
+});
 
 var serverSync = Backbone.sync;
 
@@ -365,7 +457,7 @@ function modelSync(method, model, options) {
           model._destroyed = true;
         }
 
-        if(success) success(options.context, response);
+        if(success) success.call(options.context, response);
       };
 
       return serverSync.apply(this, [method, model, options]);
@@ -386,7 +478,7 @@ function modelSync(method, model, options) {
       options.success = function (response) {
         model._fetched = true;
 
-        if(success) success(options.context, response);
+        if(success) success.call(options.context, response);
       };
 
       return serverSync.apply(this, [method, model, options]);
@@ -405,8 +497,63 @@ function collectionSync(method, collection, options) {
     case "delete":
       break;
     case "read":
-      break;
+      var success = options.success;
+
+      options.remove = false;
+
+      var modelsToFetch;
+      if(mode === "infinite") {
+        // Infinite mode.
+        modelsToFetch = collection.filter(function (model) {
+          return !model.isNew() && !model.isFetched();
+        });
+
+        if(_.isEmpty(modelsToFetch)) {
+          _.defer(success, collection, {}, options);
+          return;
+        }
+
+        var idsToFetch = _.map(modelsToFetch, function (model) {
+            return model.id;
+        });
+
+        options.url = collection.idsUrl(idsToFetch);
+      }
+
+      // Server mode.
+      options.success = function (resp) {
+        // Prepares the collection according to the passed option.
+        var method = options.reset ? 'reset' : 'set';
+        collection[method](resp, options);
+
+        // Marks responsed models as fetched.
+        var models = resp;
+        _.each(models, function (value) {
+          var model = collection.get(value);
+          model._fetched = true;
+        });
+
+        // Marks the collection as fetched.
+        collection.fetched = true;
+
+        if(success) success.call(options.context, resp);
+      };
+
+      return serverSync.apply(this, [method, collection, options]);
+
   }
 }
+
+var wrapError = function(model, options) {
+  var error = options.error;
+  options.error = function(resp) {
+    if (error) error.call(options.context, model, resp, options);
+    model.trigger('error', model, resp, options);
+  };
+};
+
+var urlError = function() {
+  throw new Error('A "url" property or function must be specified');
+};
 
 Backbone.sync = Syncer.sync;

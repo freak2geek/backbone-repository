@@ -7,10 +7,10 @@ Backbone.ajax = najax;
 require('../lib/backbone.syncer');
 
 var User = Backbone.Model.extend({
-	url: "http://www.example.com/"
+	url: "http://www.example.com/user"
 });
 var Users = Backbone.Collection.extend({
-	url: "http://www.example.com/"
+	url: "http://www.example.com/users"
 });
 
 var test = function(name, options, callback) {
@@ -237,7 +237,6 @@ test('Dirtied attributes are cleaned on server successful response.', function (
     name: "Nacho",
     surname: "Codoñer"
   }, {
-    patch: true,
     success: function (model, response, options) {
       t.same(user.dirtiedAttributes(), {
         age: 26,
@@ -336,7 +335,6 @@ test('A destroyed model is earsed from local cache on server successful response
 	});
 
 	user.destroy({
-		mode: "server",
     success: function (model, response, options) {
       t.ok(user.isDestroyed(),
         "User has been destroyed.");
@@ -446,5 +444,228 @@ test('Push method on Model. Destroy case.', function (t) {
 
 });
 
+test('Fetch method on Collection. Infinite mode.', function (t) {
+  t.plan(7);
+
+  // Model to fetch
+  var user = User.create({
+    id: 1
+  });
+
+  // Model to fetch
+  var user2 = User.create({
+    id: 2
+  });
+
+  // Model to keep
+  var user3 = User.create();
+
+
+  // Fetched model
+  var user4 = User.create({
+    id: 4
+  });
+  user4._fetched = true;
+
+  var users = new Users([user, user2, user3, user4]);
+
+  t.ok(!user.isFetched(), "Model is not fetched.");
+  t.ok(!user2.isFetched(), "Model is not fetched.");
+
+  users.fetch({
+    mode: "infinite",
+    success: function (collection, response, options) {
+      t.same(options.url, collection.url+"/1;2", "The list of ids to fetch is set correctly at the url.");
+
+      t.ok(collection.get(1).isFetched(), "Model is fetched.");
+      t.ok(collection.get(2).isFetched(), "Model is fetched.");
+
+      t.ok(!_.isUndefined(collection.get(user3)), "Local model is kept in the collection.");
+      t.ok(!_.isUndefined(collection.get(user4)), "Fetched model is kept in the collection.");
+    },
+    error: function (collection, response, options) {
+      options.success([
+        {id: 1},
+        {id: 2}
+      ]);
+    }
+  });
+
+});
+
+test('Fetch method on Collection. Server mode.', function (t) {
+  t.plan(6);
+
+  // Model to fetch
+  var user = User.create({
+    id: 1
+  });
+
+  // Model to fetch
+  var user2 = User.create({
+    id: 2
+  });
+
+  // Model to keep
+  var user3 = User.create();
+
+  // Fetched model
+  var user4 = User.create({
+    id: 4
+  });
+  user4._fetched = true;
+
+  var users = new Users([user, user2, user3, user4]);
+
+  t.ok(!user.isFetched(), "Model is not fetched.");
+  t.ok(!user2.isFetched(), "Model is not fetched.");
+
+  users.fetch({
+    success: function (collection, response, options) {
+      t.ok(collection.get(1).isFetched(), "Model is fetched.");
+      t.ok(collection.get(2).isFetched(), "Model is fetched.");
+      t.ok(collection.get(4).isFetched(), "Model is fetched.");
+
+      t.ok(!_.isUndefined(collection.get(user3)), "Local model is kept in the collection.");
+    },
+    error: function (collection, response, options) {
+      options.success([
+        {id: 1},
+        {id: 2},
+        {id: 4}
+      ]);
+    }
+  });
+
+});
+
+test('Save method on Collection. Server mode.', function (t) {
+  t.plan(2);
+
+  // Remote model
+  var user = User.create({
+    id: 1
+  });
+
+  // Local model
+  var user2 = User.create();
+
+  var users = new Users([user, user2]);
+
+  users.save({
+    success: function (model, response, options) {
+      if (model === user) {
+        t.ok(!model.hasDirtied(), "User has been updated and it has no dirtied attributes.");
+      } else if (model === user2)  {
+        t.ok(!model.isNew(), "User2 has been created.");
+      }
+    },
+    error: function (model, response, options) {
+      if (model.isNew()) {
+        options.success({
+          id: 2
+        });
+      } else {
+        options.success();
+      }
+    }
+  });
+
+});
+
+test('Destroy method on Collection. Server mode.', function (t) {
+  t.plan(2);
+
+  // Remote model
+  var user = User.create({
+    id: 1
+  });
+
+  // Local model
+  var user2 = User.create();
+
+  var users = new Users([user, user2]);
+
+  users.destroy({
+    success: function (model, response, options) {
+      t.pass();
+    },
+    error: function (model, response, options) {
+      options.success();
+    }
+  });
+
+});
+
+test('Pull method on Collection.', function (t) {
+  t.plan(2);
+
+  // Model to fetch
+  var user = User.create({
+    id: 1
+  });
+
+  var users = new Users([user]);
+
+  t.ok(!user.isFetched(), "Model is not fetched.");
+
+  users.pull({
+    success: function (collection, response, options) {
+      t.ok(collection.get(1).isFetched(), "Model is fetched.");
+    },
+    error: function (collection, response, options) {
+      options.success([
+        {id: 1}
+      ]);
+    }
+  });
+
+});
+
+test('Push method on Collection.', function (t) {
+  t.plan(3);
+
+  // Model to create
+  var user = User.create();
+
+  // Model to update
+  var user2 = User.create({
+    id: 2,
+    name: "Nacho"
+  });
+
+  // Model to destroy
+  var user3 = User.create({
+    id: 3
+  });
+
+  user3.destroy({
+    mode: "client"
+  });
+
+  var users = new Users([user, user2, user3]);
+
+  users.push({
+    success: function (model, response, options) {
+      if (model === user) {
+        t.ok(!model.isNew(), "User has been created.");
+      } else if (model === user2) {
+        t.ok(!model.hasDirtied(), "User2 has no dirtied attributes.");
+      }  else if (model === user3) {
+        t.ok(model.isDestroyed(), "User3 has been destroyed.");
+      }
+    },
+    error: function (model, response, options) {
+      if (model === user) {
+        options.success({
+          id: 1
+        });
+      } else {
+        options.success();
+      }
+    }
+  });
+
+});
 
 

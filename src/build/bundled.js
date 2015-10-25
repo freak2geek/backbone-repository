@@ -16,7 +16,10 @@
 }(this, function (Backbone, _) {
 	'use strict';
 
-	Backbone.Syncer = {};
+	Backbone.Syncer = {
+    IDS_URL_SEPARATOR: "/",
+    IDS_SEPARATOR: ";"
+  };
 
 	Backbone.Syncer.VERSION =  '<%= version %>';
 
