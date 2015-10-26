@@ -7,7 +7,8 @@ Backbone.ajax = najax;
 require('../lib/backbone.syncer');
 
 var User = Backbone.Model.extend({
-	url: "http://www.example.com/user"
+	url: "http://www.example.com/user",
+  versionAttribute: "version"
 });
 var Users = Backbone.Collection.extend({
 	url: "http://www.example.com/users"
@@ -262,6 +263,168 @@ test('Dirtied attributes are cleaned on server successful response.', function (
   // Age attribute becomes dirty.
   user.set({
     age: 26
+  });
+
+});
+
+test('Fetch methods does not affect version attribute. Server mode.', function (t) {
+  t.plan(1);
+
+  var user = User.create({
+    id: 1,
+    version: 1
+  });
+
+  user.fetch({
+    mode: "server",
+    success: function (model, response, options) {
+      t.ok(user.isFetched(),
+        "User has not been modified its fetch status.");
+    },
+    error: function (model, response, options) {
+      options.success({
+        version: 2
+      });
+    }
+  });
+
+});
+
+test('Fetch method is forced to affect version attribute. Server mode.', function (t) {
+  t.plan(2);
+
+  var user = User.create({
+    id: 1
+  });
+  user._fetched = true;
+
+  t.ok(user.isFetched(),
+        "User is fetched.");
+
+  user.fetch({
+    mode: "server",
+    version: true,
+    success: function (model, response, options) {
+      t.ok(!user.isFetched(),
+        "User is no longer fetched as a new version has been set.");
+    },
+    error: function (model, response, options) {
+      options.success({
+        version: 1
+      });
+    }
+  });
+
+});
+
+test('Save and set method do not affect version attribute.', function (t) {
+  t.plan(2);
+
+  var user = User.create({
+    id: 1,
+    version: 1
+  });
+  user._fetched = true;
+
+  user.set({
+    version: 2
+  });
+
+  t.ok(user.isFetched(),
+    "User is still fetched.");
+
+  user.save({
+    version: 3
+  }, {
+    mode: "client",
+    success: function (model, response, options) {
+      t.ok(user.isFetched(),
+        "User is still fetched.");
+    }
+  });
+
+});
+
+test('Save and set method affect version attribute.', function (t) {
+  t.plan(2);
+
+  var user = User.create({
+    id: 1,
+    version: 1
+  });
+  user._fetched = true;
+
+  user.set({
+    version: 2
+  }, {
+    version: true
+  });
+
+  t.ok(!user.isFetched(),
+    "User is no longer fetched as a new version has been set.");
+
+  user._fetched = true;
+
+  user.save({
+    version: 3
+  }, {
+    mode: "client",
+    version: true,
+    success: function (model, response, options) {
+      t.ok(!user.isFetched(),
+        "User is no longer fetched as a new version has been set.");
+    }
+  });
+
+});
+
+test('Save method does not affect version attribute. Server mode.', function (t) {
+  t.plan(1);
+
+  var user = User.create({
+    id: 1,
+    name: "Nacho",
+    version: 1
+  });
+  user._fetched = true;
+
+  user.save({}, {
+    mode: "server",
+    success: function (model, response, options) {
+      t.ok(user.isFetched(),
+        "User has not been modified its fetch status.");
+    },
+    error: function (model, response, options) {
+      options.success({
+        version: 2
+      });
+    }
+  });
+
+});
+
+test('Save method is forced to affect version attribute. Server mode.', function (t) {
+  t.plan(1);
+
+  var user = User.create({
+    id: 1,
+    name: "Nacho",
+    version: 1
+  });
+  user._fetched = true;
+
+  user.save({}, {
+    mode: "server",
+    version: true,
+    success: function (model, response, options) {
+      t.ok(!user.isFetched(),
+        "User is no longer fetched as a new version has been set.");
+    },
+    error: function (model, response, options) {
+      options.success({
+        version: 2
+      });
+    }
   });
 
 });

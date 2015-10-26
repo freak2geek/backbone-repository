@@ -6,6 +6,29 @@ var previousSet = Backbone.Model.prototype.set;
 var previousSave = Backbone.Model.prototype.save;
 
 /**
+ * @return {Boolean} Checks whether 'newVersion' is more actual than
+ * 'currentVersion'.
+ */
+function isLatestVersion (newVersion, currentVersion) {
+  if(_.isUndefined(newVersion)) {
+    return false;
+  }
+
+  if(_.isUndefined(currentVersion)) {
+    return true;
+  }
+
+  if(_.isNumber(newVersion) && _.isNumber(currentVersion)) {
+    return newVersion > currentVersion;
+  } else {
+    var strNewVersion = newVersion+"";
+    var strCurrentVersion = currentVersion+"";
+
+    return strNewVersion.localeCompare(strCurrentVersion) > 0;
+  }
+}
+
+/**
  * Replacement for Backbone.Model. Supports a global track point.
  *
  * @class Backbone.Model
@@ -61,7 +84,27 @@ Backbone.Model = Backbone.Model.extend({
 		this.on("destroy", function(model) {
 			model._dirtyDestroyed = true;
 		});
+
+    // Versioning handler.
+    if(this.versionAttribute) {
+      this.on("change:"+this.versionAttribute,
+        function (model, newVersion, options) {
+          var currentVersion = model.previousAttributes()[model.versionAttribute];
+          if (options && options.version
+                && isLatestVersion(newVersion, currentVersion)) {
+            model._fetched = false;
+          }
+      });
+    }
+
 	},
+
+  /**
+   * @property {String|Boolean} [versionAttribute=false] Represents
+   * the attribute used as version stamps for the model. In case 'false',
+   * versioning is not enabled for the model.
+   */
+  versionAttribute: false,
 
 	/**
 	 * @property {boolean} [_fetched="false"] Flag that means if the model
