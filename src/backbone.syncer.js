@@ -158,6 +158,14 @@ Backbone.Model = Backbone.Model.extend({
 		return this._dirtyDestroyed;
 	},
 
+  /**
+   * Erases dirtied changes of the model, whether attribute change or model destroy.
+   */
+  clearDirtied: function() {
+    this.dirtied = {};
+    this.dirtiedDestroyed = false;
+  },
+
 	set: function(key, val, options) {
 		if (key == null) return this;
 
@@ -551,12 +559,6 @@ function collectionSync(method, collection, options) {
   var mode = options.mode;
 
   switch(method) {
-    case "create":
-    case "update":
-    case "patch":
-      break;
-    case "delete":
-      break;
     case "read":
       var success = options.success;
 
