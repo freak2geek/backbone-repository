@@ -702,6 +702,61 @@ test('Fetch method on Collection. Server mode.', function (t) {
 
 });
 
+test('Fetch methods does not affect version attribute. Collection case. Server mode.', function (t) {
+  t.plan(1);
+
+  var user = User.create({
+    id: 1,
+    version: 1
+  });
+
+  var users = new Users([user]);
+
+  users.fetch({
+    success: function (collection, response, options) {
+      t.ok(user.isFetched(),
+        "User has not been modified its fetch status.");
+    },
+    error: function (collection, response, options) {
+      options.success([{
+        id: 1,
+        version: 2
+      }]);
+    }
+  });
+
+});
+
+test('Fetch method is forced to affect version attribute. Collection case. Server mode.', function (t) {
+  t.plan(2);
+
+  var user = User.create({
+    id: 1,
+    version: 1
+  });
+  user._fetched = true;
+
+  var users = new Users([user]);
+
+  t.ok(user.isFetched(),
+        "User is fetched.");
+
+  user.fetch({
+    version: true,
+    success: function (collection, response, options) {
+      t.ok(!user.isFetched(),
+        "User is no longer fetched as a new version has been set.");
+    },
+    error: function (collection, response, options) {
+      options.success({
+        id: 1,
+        version: 2
+      });
+    }
+  });
+
+});
+
 test('Save method on Collection. Server mode.', function (t) {
   t.plan(2);
 
