@@ -4,7 +4,7 @@ var Backbone = require('backbone'),
 
 Backbone.ajax = najax;
 
-require('../lib/backbone.syncer');
+require('../../lib/<%= name %>');
 
 var User = Backbone.Model.extend({
 	url: "http://www.example.com/user",

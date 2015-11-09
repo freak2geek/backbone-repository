@@ -9,6 +9,24 @@ module.exports = function (grunt) {
 	grunt.initConfig({
 		// Metadata.
 		pkg: grunt.file.readJSON('package.json'),
+		subpkg: {
+			base: {
+				title: "Backbone.Syncer",
+				name: "backbone.syncer"
+			},
+			baseLocally: {
+				title: "Backbone.Syncer.Locally",
+				name: "backbone.syncer.locally"
+			},
+			supermodel: {
+				title: "Supermodel.Syncer",
+				name: "supermodel.syncer"
+			},
+			supermodelLocally: {
+				title: "Backbone.Syncer",
+				name: "supermodel.syncer.locally"
+			}
+		},
 		meta: {
 			version: '<%= pkg.version %>',
 			banner: '/*! <%= pkg.title || pkg.name %> - v<%= pkg.version %> - ' +
@@ -26,12 +44,39 @@ module.exports = function (grunt) {
 			files: ['package.json', 'component.json']
 		},
 		clean: {
-			lib: ['./lib']
+			base: [
+				'lib/<%= subpkg.base.name %>.js', 
+				'lib/<%= subpkg.base.name %>.min.js'
+			],
+			baseLocally: [
+				'lib/<%= subpkg.baseLocally.name %>.js', 
+				'lib/<%= subpkg.baseLocally.name %>.min.js'
+			],
+			supermodel: [
+				'lib/<%= subpkg.supermodel.name %>.js', 
+				'lib/<%= subpkg.supermodel.name %>.min.js'
+			],
+			supermodelLocally: [
+				'lib/<%= subpkg.supermodelLocally.name %>.js', 
+				'lib/<%= subpkg.supermodelLocally.name %>.min.js'
+			],
 		},
 		preprocess: {
-			bundle: {
-				src: 'src/build/bundled.js',
-				dest: 'tmp/<%= pkg.name %>.js'
+			base: {
+				src: 'src/bundle/<%= subpkg.base.name %>.js',
+				dest: 'tmp/<%= subpkg.base.name %>.js'
+			},
+			baseLocally: {
+				src: 'src/bundle/<%= subpkg.baseLocally.name %>.js',
+				dest: 'tmp/<%= subpkg.baseLocally.name %>.js'
+			},
+			supermodel: {
+				src: 'src/bundle/<%= subpkg.supermodel.name %>.js',
+				dest: 'tmp/<%= subpkg.supermodel.name %>.js'
+			},
+			supermodelLocally: {
+				src: 'src/bundle/<%= subpkg.supermodelLocally.name %>.js',
+				dest: 'tmp/<%= subpkg.supermodelLocally.name %>.js'
 			}
 		},
 		template: {
@@ -40,9 +85,66 @@ module.exports = function (grunt) {
 					version: '<%= pkg.version %>'
 				}
 			},
-			bundle: {
-				src: '<%= preprocess.bundle.dest %>',
-				dest: '<%= preprocess.bundle.dest %>'
+			base: {
+				src: '<%= preprocess.base.dest %>',
+				dest: '<%= preprocess.base.dest %>'
+			},
+			baseTest: {
+				options: {
+					data: {
+						name: '<%= subpkg.base.name %>'
+					}
+				},
+				files: {
+					'test/base/test.js': ['test/base/tpl/test.js']
+				}
+			},
+			baseLocally: {
+				src: '<%= preprocess.baseLocally.dest %>',
+				dest: '<%= preprocess.baseLocally.dest %>'
+			},
+			baseLocallyTest: {
+				options: {
+					data: {
+						name: '<%= subpkg.baseLocally.name %>'
+					}
+				},
+				files: {
+					'test/baseLocally/testBase.js': ['test/base/tpl/test.js'],
+					'test/baseLocally/test.js': ['test/baseLocally/tpl/test.js']
+				}
+			},
+			supermodel: {
+				src: '<%= preprocess.supermodel.dest %>',
+				dest: '<%= preprocess.supermodel.dest %>'
+			},
+			supermodelTest: {
+				options: {
+					data: {
+						name: '<%= subpkg.supermodel.name %>'
+					}
+				},
+				files: {
+					'test/supermodel/testBase.js': ['test/base/tpl/test.js'],
+					'test/supermodel/test.js': ['test/supermodel/tpl/test.js']
+				}
+			},
+			supermodelLocally: {
+				src: '<%= preprocess.supermodelLocally.dest %>',
+				dest: '<%= preprocess.supermodelLocally.dest %>'
+			},
+			supermodelLocallyTest: {
+				options: {
+					data: {
+						name: '<%= subpkg.supermodelLocally.name %>'
+					}
+				},
+				files: {
+					'test/supermodelLocally/testBase.js': ['test/base/tpl/test.js'],
+					'test/supermodelLocally/testBaseLocally.js': ['test/baseLocally/tpl/test.js'],
+					'test/supermodelLocally/testSupermodel.js': ['test/supermodel/tpl/test.js'],
+					'test/supermodelLocally/test.js': ['test/supermodelLocally/tpl/test.js']
+				}
 			}
 		},
 		concat: {
@@ -50,9 +152,21 @@ module.exports = function (grunt) {
 				banner: '<%= meta.banner %>',
 				stripBanners: true
 			},
-			lib: {
-				src: '<%= preprocess.bundle.dest %>',
-				dest: 'lib/<%= pkg.name %>.js'
+			base: {
+				src: '<%= preprocess.base.dest %>',
+				dest: 'lib/<%= subpkg.base.name %>.js'
+			},
+			baseLocally: {
+				src: '<%= preprocess.base.dest %>',
+				dest: 'lib/<%= subpkg.baseLocally.name %>.js'
+			},
+			supermodel: {
+				src: '<%= preprocess.base.dest %>',
+				dest: 'lib/<%= subpkg.supermodel.name %>.js'
+			},
+			supermodelLocally: {
+				src: '<%= preprocess.base.dest %>',
+				dest: 'lib/<%= subpkg.supermodelLocally.name %>.js'
 			}
 		},
 		tape: {
@@ -60,35 +174,40 @@ module.exports = function (grunt) {
 				pretty: true,
 				output: 'console'
 			},
-			files: ['test/**/*.js']
+			base: ['test/base/*.js'],
+			baseLocally: ['test/baseLocally/*.js'],
+			supermodel: ['test/supermodel/*.js'],
+			supermodelLocally: ['test/supermodelLocally/*.js']
 		},
 		uglify: {
 			options: {
 				banner: '<%= banner %>'
 			},
-			lib: {
-				src: '<%= concat.lib.dest %>',
-				dest: 'lib/<%= pkg.name %>.min.js'
-			}
-		},
-		watch: {
-			gruntfile: {
-				files: '<%= jshint.gruntfile.src %>',
-				tasks: ['jshint:gruntfile']
+			base: {
+				src: '<%= concat.base.dest %>',
+				dest: 'lib/<%= subpkg.base.name %>.min.js'
 			},
-			source: {
-				files: ['<%= concat.lib.src %>'],
-				tasks: ['clean:lib', 'concat', 'jshint:source', 'jshint:test', 'qunit']
+			baseLocally: {
+				src: '<%= concat.baseLocally.dest %>',
+				dest: 'lib/<%= subpkg.baseLocally.name %>.min.js'
 			},
-			test: {
-				files: ['<%= jshint.test.src %>', '<%= qunit.files %>'],
-				tasks: ['jshint:test', 'qunit']
+			supermodel: {
+				src: '<%= concat.supermodel.dest %>',
+				dest: 'lib/<%= subpkg.supermodel.name %>.min.js'
+			},
+			supermodelLocally: {
+				src: '<%= concat.supermodelLocally.dest %>',
+				dest: 'lib/<%= subpkg.supermodelLocally.name %>.min.js'
 			}
 		},
 		unwrap: {
 			"backbone.jsonify": {
 				src:	'./node_modules/backbone.jsonify/lib/backbone.jsonify.js',
 				dest:	'./tmp/backbone.jsonify.bare.js'
+			},			
+			"supermodel.jsonify": {
+				src:	'./node_modules/backbone.jsonify/lib/supermodel.jsonify.js',
+				dest:	'./tmp/supermodel.jsonify.bare.js'
 			}
 		}
 	});
@@ -118,9 +237,68 @@ module.exports = function (grunt) {
 		} // if
 	});
 
+	// Backbone.Syncer. Base library tasks.
+	var baseTasks = [
+		'unwrap:backbone.jsonify',
+		'clean:base',
+		'preprocess:base',
+		'template:base',
+		'concat:base',
+		'template:baseTest',
+		'tape:base',
+		'uglify:base'
+	];
+
+	grunt.registerTask('base', baseTasks);
+
+	// Base + locally library tasks.
+	var baseLocallyTasks = [
+		'unwrap:backbone.jsonify',
+		'clean:baseLocally',
+		'preprocess:baseLocally',
+		'template:baseLocally',
+		'concat:baseLocally',
+		'template:baseLocallyTest',
+		'tape:baseLocally',
+		'uglify:baseLocally'
+	];
+
+	grunt.registerTask('baseLocally', baseTasks.concat(baseLocallyTasks));
+
+	// Supermodel.Syncer. Supermodel library tasks.
+	var supermodelTasks = [
+		'unwrap:supermodel.jsonify',
+		'clean:supermodel',
+		'preprocess:supermodel',
+		'template:supermodel',
+		'concat:supermodel',
+		'template:supermodelTest',
+		'tape:supermodel',
+		'uglify:supermodel'
+	];
+
+	grunt.registerTask('supermodel', baseTasks.concat(baseLocallyTasks).concat(supermodelTasks));
+
+	// Supermodel + Locally library tasks.
+	var supermodelLocallyTasks = [
+		'unwrap:supermodel.jsonify',
+		'clean:supermodelLocally',
+		'preprocess:supermodelLocally',
+		'template:supermodelLocally',
+		'concat:supermodelLocally',
+		'template:supermodelLocallyTest',
+		'tape:supermodelLocally',
+		'uglify:supermodelLocally'
+	];
+
+	grunt.registerTask('supermodelLocally', baseTasks.concat(baseLocallyTasks).concat(supermodelTasks).concat(supermodelLocallyTasks));
+
+
 	// Default task.
-	grunt.registerTask('default', ['unwrap', 'clean', 'preprocess', 'template', 'concat', 'tape', 'uglify']);
+
+	grunt.registerTask('default', baseTasks.concat(baseLocallyTasks).concat(supermodelTasks).concat(supermodelLocallyTasks));
+	
 	// Test task.
-	grunt.registerTask('test', ['tape']);
+	grunt.registerTask('test', ['template:baseTest', 'template:baseLocallyTest', 'template:supermodelTest', 'template:supermodelLocallyTest', 'tape']);
 
 };

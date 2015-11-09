@@ -16,16 +16,9 @@
 }(this, function (Backbone, _) {
 	'use strict';
 
-	Backbone.Syncer = {
-    IDS_URL_SEPARATOR: "/",
-    IDS_SEPARATOR: ";"
-  };
-
-	Backbone.Syncer.VERSION =  '<%= version %>';
+	// @include ../common.js
 
 	// @include ../../tmp/backbone.jsonify.bare.js
-
-	// @include ../dao/localstorage.js
 
 	// @include ../backbone.syncer.js
 
