@@ -263,7 +263,7 @@ module.exports = function (grunt) {
 		'uglify:baseLocally'
 	];
 
-	grunt.registerTask('baseLocally', baseTasks.concat(baseLocallyTasks));
+	grunt.registerTask('baseLocally', baseLocallyTasks);
 
 	// Supermodel.Syncer. Supermodel library tasks.
 	var supermodelTasks = [
@@ -277,7 +277,7 @@ module.exports = function (grunt) {
 		'uglify:supermodel'
 	];
 
-	grunt.registerTask('supermodel', baseTasks.concat(baseLocallyTasks).concat(supermodelTasks));
+	grunt.registerTask('supermodel', supermodelTasks);
 
 	// Supermodel + Locally library tasks.
 	var supermodelLocallyTasks = [
@@ -291,7 +291,7 @@ module.exports = function (grunt) {
 		'uglify:supermodelLocally'
 	];
 
-	grunt.registerTask('supermodelLocally', baseTasks.concat(baseLocallyTasks).concat(supermodelTasks).concat(supermodelLocallyTasks));
+	grunt.registerTask('supermodelLocally', supermodelLocallyTasks);
 
 
 	// Default task.
