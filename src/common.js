@@ -1,6 +1,6 @@
-Backbone.Syncer = {
+Backbone.Syncer = {	
+	serverSync: Backbone.sync,
 	IDS_URL_SEPARATOR: "/",
-	IDS_SEPARATOR: ";"
+	IDS_SEPARATOR: ";",
+	VERSION:  '<%= version %>'
 };
-
-Backbone.Syncer.VERSION =  '<%= version %>';

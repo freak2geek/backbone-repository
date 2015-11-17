@@ -1,16 +1,43 @@
+/* Backbone.Syncer.Locally */
+
 _.extend(Backbone.Syncer, {
+  /**
+   * @property {String} [storagePrefix] 
+   * The prefix for using in all storages.
+   */
   storagePrefix: undefined,
-  compressStorage: false
+  /**
+   * @property {Boolean} [compressStorage]
+   * Wheter or not to use Locally compression by default.
+   */
+  compressStorage: false,
+  /**
+   * Gets Locally's Store object.
+   */
+  storage: function() {
+    return Storage();
+  }
 });
 
-var storage; 
+/**
+ * Singleton variable for Locally's Store object.
+ */
+var storage;
+
+/**
+ * Singleton method to get Locally's store object.
+ */
 var Storage = function () {
   if(!storage) {
-      storage = new Locally.Store({ compress: Backbone.Syncer.compressStorage });
+    storage = new Locally.Store({ compress: Backbone.Syncer.compressStorage });
   }
   return storage;
 };
 
+/**
+ * Hash that contains current cids for local models 
+ * identified by a sid (storage id).
+ */
 var cids = {};
 
 /**
@@ -24,20 +51,6 @@ Locally.Store.prototype.setVersion = function (newVersion) {
   if (isLaterVersion(newVersion, currentVersion)) {
     store.clear();
   }
-};
-
-// Generate four random hex digits.
-function S4() {
-   return (((1+Math.random())*0x10000)|0).toString(16).substring(1);
-};
-
-// Generate a pseudo-GUID by concatenating random hexadecimal.
-function guid() {
-   return (S4()+S4()+"-"+S4()+"-"+S4()+"-"+S4()+"-"+S4()+S4()+S4());
-};
-
-var storeNameError = function () {
-  throw new Error('An "storeName" property or function must be specified for storage');
 };
 
 /**
@@ -372,12 +385,12 @@ _.extend(CollectionStorage.prototype, {
 
 });
 
-_.extend(Backbone.Syncer, {
-  storage: Storage
-});
 
 var prevAllModel = Backbone.Model.prototype.constructor.all;
 
+/**
+ * Extends Backbone.Model contructor to enable Locally.
+ */
 _.extend(Backbone.Model.prototype.constructor, {  
   /**
    * @property {string} [storeName=""] 
@@ -404,11 +417,13 @@ _.extend(Backbone.Model.prototype.constructor, {
 
 var prevInit = Backbone.Model.prototype.initialize;
 var previousSetModel = Backbone.Model.prototype.set;
-var prevToJSON = Backbone.Model.prototype.toJSON;
-
 var prevFetchModel = Backbone.Model.prototype.fetch;
 
+/**
+ * Extends Backbone.Model to enable Locally.
+ */
 _.extend(Backbone.Model.prototype, {
+
   /**
    * @return {ModelStorage} Returns the storage manager.
    */
@@ -427,6 +442,9 @@ _.extend(Backbone.Model.prototype, {
     }, this);
   },
 
+  /**
+   * Alters `set` to enable `localStorage` option.
+   */
   set: function(key, val, options) {
     if (key == null) {      
       options = val;
@@ -454,23 +472,15 @@ _.extend(Backbone.Model.prototype, {
     return output;
   },
 
+  /**
+   * Alters `fetch` to enable `localStorage` option.
+   */
   fetch: function (options) {
     if (options && options.localStorage) {
       this.storage().load(options.localStorage);
     }
 
     return prevFetchModel.call(this, options);
-  },
-
-  toJSON: function (options) {
-    var output = prevToJSON.call(this, options);
-
-    // Include cid?
-    if (options && !options.cid) {
-      delete output[this.cidAttribute];
-    }
-
-    return output;
   }
 
 });
@@ -481,6 +491,9 @@ var prevFetchCollection = Backbone.Collection.prototype.fetch;
 var prevSaveCollection = Backbone.Collection.prototype.save;
 var prevDestroyCollection = Backbone.Collection.prototype.destroy;
 
+/**
+ * Extends Backbone.Collection to enable Locally.
+ */
 _.extend(Backbone.Collection.prototype, {
 
   /**
@@ -496,6 +509,9 @@ _.extend(Backbone.Collection.prototype, {
     return new CollectionStorage(this);
   },
 
+  /**
+   * Alters `set` to enable `localStorage` option.
+   */
   set: function(models, options) {
     var output = previousSetCollection.call(this, models, options);
     
@@ -506,6 +522,9 @@ _.extend(Backbone.Collection.prototype, {
     return output;
   },
 
+  /**
+   * Alters `fetch` to enable `localStorage` option.
+   */
   fetch: function (options) {
     if (options && options.localStorage) {
       this.storage().load(options.localStorage);
@@ -514,6 +533,9 @@ _.extend(Backbone.Collection.prototype, {
     return prevFetchCollection.call(this, options);
   },
 
+  /**
+   * Alters `save` to enable `localStorage` option.
+   */
   save: function (options) {
     if (options && options.localStorage) {
       this.storage().store(options.localStorage);
@@ -522,6 +544,9 @@ _.extend(Backbone.Collection.prototype, {
     return prevSaveCollection.call(this, options);
   },
 
+  /**
+   * Alters `destroy` to enable `localStorage` option.
+   */
   destroy: function (options) {
     if (options && options.localStorage) {
       this.storage().remove(options.localStorage);
@@ -531,3 +556,21 @@ _.extend(Backbone.Collection.prototype, {
   }
 
 });
+
+/**
+ * @return {String} Generates four random hex digits.
+ */
+function S4() {
+   return (((1+Math.random())*0x10000)|0).toString(16).substring(1);
+};
+
+/**
+ * @return {String} Generates a GUID.
+ */
+function guid() {
+   return (S4()+S4()+"-"+S4()+"-"+S4()+"-"+S4()+"-"+S4()+S4()+S4());
+};
+
+var storeNameError = function () {
+  throw new Error('An "storeName" property or function must be specified for storage');
+};
