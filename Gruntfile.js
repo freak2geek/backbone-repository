@@ -157,15 +157,15 @@ module.exports = function (grunt) {
 				dest: 'lib/<%= subpkg.base.name %>.js'
 			},
 			baseLocally: {
-				src: '<%= preprocess.base.dest %>',
+				src: '<%= preprocess.baseLocally.dest %>',
 				dest: 'lib/<%= subpkg.baseLocally.name %>.js'
 			},
 			supermodel: {
-				src: '<%= preprocess.base.dest %>',
+				src: '<%= preprocess.supermodel.dest %>',
 				dest: 'lib/<%= subpkg.supermodel.name %>.js'
 			},
 			supermodelLocally: {
-				src: '<%= preprocess.base.dest %>',
+				src: '<%= preprocess.supermodelLocally.dest %>',
 				dest: 'lib/<%= subpkg.supermodelLocally.name %>.js'
 			}
 		},
