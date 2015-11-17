@@ -9,7 +9,7 @@ var previousSave = Backbone.Model.prototype.save;
  * @return {Boolean} Checks whether 'newVersion' is more actual than
  * 'currentVersion'.
  */
-function isLatestVersion (newVersion, currentVersion) {
+function isLaterVersion (newVersion, currentVersion) {
   if(_.isUndefined(newVersion)) {
     return false;
   }
@@ -18,14 +18,7 @@ function isLatestVersion (newVersion, currentVersion) {
     return true;
   }
 
-  if(_.isNumber(newVersion) && _.isNumber(currentVersion)) {
-    return newVersion > currentVersion;
-  } else {
-    var strNewVersion = newVersion+"";
-    var strCurrentVersion = currentVersion+"";
-
-    return strNewVersion.localeCompare(strCurrentVersion) > 0;
-  }
+  return newVersion !== currentVersion;
 }
 
 /**
@@ -91,7 +84,7 @@ Backbone.Model = Backbone.Model.extend({
         function (model, newVersion, options) {
           var currentVersion = model.previousAttributes()[model.versionAttribute];
           if (options && options.version
-                && isLatestVersion(newVersion, currentVersion)) {
+                && isLaterVersion(newVersion, currentVersion)) {
             model._fetched = false;
           }
       });
@@ -179,13 +172,13 @@ Backbone.Model = Backbone.Model.extend({
 
 		options || (options = {});
 
-		previousSet.call(this, attrs, options);
+		var output = previousSet.call(this, attrs, options);
 
-		if(!options.mode || options.mode === "client") {
+		if(!options.response) {
 			_.extend(this.dirtied, _.omit(attrs, [this.idAttribute, this.cidAttribute]));
 		}
 
-		return this;
+		return output;
   },
 
 	/**
@@ -273,6 +266,20 @@ Backbone.Model = Backbone.Model.extend({
 	create: function (attrs, options) {
 		options || (options = {});
 
+    // Corrects id attr according to the option passed.
+    if (options.idAttribute && attrs[options.idAttribute]) {
+      var tmp = attrs[options.idAttribute];
+      delete attrs[options.idAttribute];
+      attrs[this.prototype.idAttribute] = tmp;
+    }
+
+    // Corrects cid attr according to the option passed.
+    if (options.cidAttribute && attrs[options.cidAttribute]) {
+      var tmp = attrs[options.cidAttribute];
+      delete attrs[options.cidAttribute];
+      attrs[this.prototype.cidAttribute] = tmp;
+    }
+
 		var id = attrs && attrs[this.prototype.idAttribute];
 
 		var model = this.find(attrs);
@@ -329,7 +336,7 @@ Backbone.Model = Backbone.Model.extend({
 			var all = this._all = new All();
 
 			all.on("destroy", function(model) {
-				if(model.isDirtyDestroyed() && !model.isDestroyed())
+				if (model.isDirtyDestroyed() && !model.isDestroyed())
 					all.add(model, {silent: true});
 			});
 		}
@@ -460,6 +467,9 @@ Backbone.Collection = Backbone.Collection.extend({
 var serverSync = Backbone.sync;
 
 var Syncer = {};
+
+Syncer.serverSync = serverSync;
+
 Syncer.sync = function (method, model, options) {
   options || (options = {});
 
@@ -486,12 +496,14 @@ function modelSync(method, model, options) {
 
       if(mode === "client") {
         // Client mode.
-        _.defer(success, model, {}, options);
+        _.defer(success);
         return;
       }
 
       // Server mode.
       options.success = function (response) {
+        options.response = true;
+
         // Marks the model as fetched in case it is a new one.
         if(method === "create") {
           model._fetched = true;
@@ -515,12 +527,14 @@ function modelSync(method, model, options) {
 
       if(mode === "client") {
         // Client mode.
-        _.defer(success, model, {}, options);
+        _.defer(success);
         return;
       }
 
       // Server mode.
       options.success = function (response) {
+        options.response = true;
+
         if(mode === "server") {
           model.constructor.all().remove(model);
           model._destroyed = true;
@@ -534,17 +548,25 @@ function modelSync(method, model, options) {
     case "read":
       var success = options.success;
 
+      if(mode === "client") {
+        // Client mode.
+        _.defer(success);
+        return;
+      }
+
       if(mode === "infinite") {
         // Infinite mode.
         if(model.isFetched()) {
           // Model already fetched.
-          _.defer(success, model, {}, options);
+          _.defer(success);
           return;
         }
       }
 
       // Server mode & infinite mode with the model not fetched.
       options.success = function (response) {
+        options.response = true;
+
         model._fetched = true;
 
         if(success) success.call(options.context, response);
@@ -572,7 +594,7 @@ function collectionSync(method, collection, options) {
         });
 
         if(_.isEmpty(modelsToFetch)) {
-          _.defer(success, collection, {}, options);
+          _.defer(success);
           return;
         }
 
@@ -585,6 +607,8 @@ function collectionSync(method, collection, options) {
 
       // Server mode.
       options.success = function (resp) {
+        options.response = true;
+
         // Prepares the collection according to the passed option.
         var method = options.reset ? 'reset' : 'set';
         collection[method](resp, options);

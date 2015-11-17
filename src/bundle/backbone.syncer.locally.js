@@ -2,18 +2,19 @@
 
 	if (typeof define === 'function' && define.amd) {
 		// AMD. Register as an anonymous module.
-		define(['backbone', 'underscore'], factory);
+		define(['locallyjs', 'backbone', 'underscore'], factory);
 	} else if (typeof module === 'object' && module.exports) {
 		// CommonJS
 		var Backbone = require('backbone'),
-			_ = require('underscore');
+			_ = require('underscore'),
+			Locally = require('locallyjs');
 
-		module.exports = factory(Backbone, _);
+		module.exports = factory(Locally, Backbone, _);
 	} else {
 		// Browser globals
-		factory(root.Backbone, root._);
+		factory(root.Locally, root.Backbone, root._);
 	}
-}(this, function (Backbone, _) {
+}(this, function (Locally, Backbone, _) {
 	'use strict';
 
 	// @include ../common.js
@@ -21,6 +22,7 @@
 	// @include ../../tmp/backbone.jsonify.bare.js
 
 	// @include ../backbone.syncer.js
+	// @include ../backbone.syncer.locally.js
 
 }));
 

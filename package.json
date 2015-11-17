@@ -24,6 +24,7 @@
     "tape": "~2.4.2",
     "faucet": "0.0.0",
     "najax": "",
+    "locallyjs": "git://github.com/ozantunca/locally.git",
     "backbone.jsonify": "git://github.com/Gywem/Backbone.Jsonify.git"
   },
   "devDependencies": {
