@@ -167,17 +167,15 @@ _.extend(ModelStorage.prototype, {
    */
   serialize: function (options) {
     var serialized =  {
-      attrs: this.model.toJSON(_.extend({}, options, {
+      at: this.model.toJSON(_.extend({}, options, {
         cid: false
       })),
-      state: {
-        di: this.model.dirtiedAttributes(),
-        dd: this.model.isDirtyDestroyed(),
-        ch: this.model.changedAttributes(),
-        pr: this.model.previousAttributes(),
-        fe: this.model.isFetched(),
-        de: this.model.isDestroyed()
-      }
+      di: _.omit(this.model.dirtiedAttributes(), "cid"),
+      dd: this.model.isDirtyDestroyed(),
+      ch: _.omit(this.model.changedAttributes(), "cid"),
+      pr: _.omit(this.model.previousAttributes(), "cid"),
+      fe: this.model.isFetched(),
+      de: this.model.isDestroyed()
     };
 
     var sid = this.model.sid;
@@ -197,18 +195,16 @@ _.extend(ModelStorage.prototype, {
 
     this.model.sid = sid;
 
-    var attrs = serialized.attrs;
+    var attrs = serialized.at;
 
     this.model.set(attrs, _.extend({}, options, {localStorage: false}));
 
-    var state = serialized.state;
-
-    this.model.dirtied = state.di;
-    this.model._dirtyDestroyed = state.dd;
-    this.model.changed = state.ch;
-    this.model._previousAttributes = state.pr;
-    this.model._fetched = state.fe;
-    this.model._destroyed = state.de;
+    this.model.dirtied = serialized.di;
+    this.model._dirtyDestroyed = serialized.dd;
+    this.model.changed = serialized.ch;
+    this.model._previousAttributes = serialized.pr;
+    this.model._fetched = serialized.fe;
+    this.model._destroyed = serialized.de;
   }
 });
 
@@ -354,11 +350,11 @@ _.extend(CollectionStorage.prototype, {
           // Ensures it will be instantiated once.
           model.sid = sid;
           cids[sid] = model[model.cidAttribute];
-        } else if (!_.isUndefined(serializedModel.attrs.id)) {
+        } else if (!_.isUndefined(serializedModel.at.id)) {
           // The model is a remote one.
           var attrs = {};
 
-          attrs.id = serializedModel.attrs.id;
+          attrs.id = serializedModel.at.id;
 
           model = this.collection._prepareModel(attrs, 
           _.extend({}, options, {

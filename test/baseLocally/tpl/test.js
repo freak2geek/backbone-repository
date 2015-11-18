@@ -138,10 +138,10 @@ test('Loads a model and all its state (dirtied, changed and previous attributes,
 
   // Saving state values
   var attributes = _.omit(user.attributes, "cid");
-  var dirtied = user.dirtiedAttributes();
+  var dirtied = _.omit(user.dirtiedAttributes(), "cid");
   var dirtiedDestroyed = user.isDirtyDestroyed();
-  var changed = user.changedAttributes();
-  var previous = user.previousAttributes();
+  var changed = _.omit(user.changedAttributes(), "cid");
+  var previous = _.omit(user.previousAttributes(), "cid");
   var fetched = user.isFetched();
   var destroyed = user.isDestroyed();
 
