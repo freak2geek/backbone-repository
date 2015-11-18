@@ -10,6 +10,8 @@ var User = Backbone.Model.extend({
 	url: "http://www.example.com/user",
   versionAttribute: "version"
 });
+var Admin = User.extend({}, {parent: User});
+
 var Users = Backbone.Collection.extend({
 	url: "http://www.example.com/users"
 });
@@ -21,6 +23,7 @@ var test = function(name, options, callback) {
   }
   require('tape')(name, options, function(t) {
     User.reset();
+    Admin.reset();
     callback(t);
   });
 };
@@ -85,6 +88,26 @@ test('Respect idAttribute.', function (t) {
 	var model = Model.create({_id: 1});
 	t.ok(Model.create({_id: 1}) === model);
 	t.end();
+});
+
+test('Add instances to inheritance chain', function(t) {
+  var a = Admin.create({id: 1});
+  var b = User.create({id: 1});
+  t.ok(a === b);
+  t.end();
+});
+
+test('Instantiating an existing object as a subclass throws.', function(t) {
+  var admin;
+  var user = User.create({id: 1});
+  t.throws(function() {
+    admin = Admin.create({id: 1});
+  }, function(e) {
+    return e.message === 'Model with id "1" already exists.';
+  });
+  t.ok(!Admin.all().include(admin));
+  t.ok(User.all().include(user));
+  t.end();
 });
 
 test('Overrides and execute an initialize method properly.', function (t) {

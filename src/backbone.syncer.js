@@ -53,11 +53,6 @@ Backbone.Model = Backbone.Model.extend({
     // Use `"cid"` for retrieving models by `attributes.cid`.
     this.set(this.cidAttribute, this.cid);
 
-    var ctor = this.constructor;
-
-    // Add the model to `all`.
-    ctor.all().add(this);
-
     // On destroying the model it is marked
     this.on("destroy", function(model) {
       model._dirtyDestroyed = true;
@@ -74,6 +69,10 @@ Backbone.Model = Backbone.Model.extend({
           }
       });
     }
+
+    // Add the model to `all` for each constructor in its prototype chain.
+    var ctor = this.constructor;
+    do { ctor.all().add(this); } while (ctor = ctor.parent);
 
   },
 
@@ -298,6 +297,13 @@ Backbone.Model = Backbone.Model.extend({
         model._validate({}, options);
 
       return model;
+    }
+    
+    // Throw if a model already exists with the same id in a superclass.
+    var parent = this;
+    while (parent = parent.parent) {
+      if (!parent.all().get(id)) continue;
+      throw new Error('Model with id "' + id + '" already exists.');
     }
 
     // Ensure attributes are parsed.
