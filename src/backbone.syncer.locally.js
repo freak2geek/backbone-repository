@@ -171,12 +171,12 @@ _.extend(ModelStorage.prototype, {
         cid: false
       })),
       state: {
-        dirtied: this.model.dirtiedAttributes(),
-        dirtiedDestroyed: this.model.isDirtyDestroyed(),
-        changed: this.model.changedAttributes(),
-        previous: this.model.previousAttributes(),
-        fetched: this.model.isFetched(),
-        destroyed: this.model.isDestroyed()
+        di: this.model.dirtiedAttributes(),
+        dd: this.model.isDirtyDestroyed(),
+        ch: this.model.changedAttributes(),
+        pr: this.model.previousAttributes(),
+        fe: this.model.isFetched(),
+        de: this.model.isDestroyed()
       }
     };
 
@@ -203,12 +203,12 @@ _.extend(ModelStorage.prototype, {
 
     var state = serialized.state;
 
-    this.model.dirtied = state.dirtied;
-    this.model._dirtyDestroyed = state.dirtiedDestroyed;
-    this.model.changed = state.changed;
-    this.model._previousAttributes = state.previous;
-    this.model._fetched = state.fetched;
-    this.model._destroyed = state.destroyed;
+    this.model.dirtied = state.di;
+    this.model._dirtyDestroyed = state.dd;
+    this.model.changed = state.ch;
+    this.model._previousAttributes = state.pr;
+    this.model._fetched = state.fe;
+    this.model._destroyed = state.de;
   }
 });
 

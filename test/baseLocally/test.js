@@ -15,16 +15,19 @@ var User = Backbone.Model.extend({
   storeName: "User"
 });
 
+var Admin = User.extend({  
+  url: "http://www.example.com/admin"
+}, {
+  storeName: "Admin",
+  parent: User
+});
+
 var Users = Backbone.Collection.extend({
 	url: "http://www.example.com/users",
   storeName: "Users",
   model: function (attrs, options) {
     return User.create(attrs, options);
   }
-});
-
-var Admin = Backbone.Model.extend({
-  url: "http://www.example.com/admin"
 });
 
 var test = function(name, options, callback) {
@@ -37,6 +40,7 @@ var test = function(name, options, callback) {
     Backbone.Syncer.storage().clear();
     // Clear local cache.
     User.reset();
+    Admin.reset();
 
     callback(t);
   });
@@ -687,4 +691,59 @@ test('Saves, fetches and destroys a local model.', function (t) {
     }
   });
 
+});
+
+test('Plays with model inheritance and reloads local cache from Storage.', function (t) {
+  t.plan(8);
+
+  // Models are created.
+  var user = User.create();
+  var admin = Admin.create();
+
+  // Saving local cache to Storage.
+  User.all().storage().store();
+  Admin.all().storage().store();
+
+  // Resets local cache.
+  User.all().reset();
+  Admin.all().reset();
+
+  // Reloads models from Storage.
+  User.all().storage().load();
+
+  t.ok(User.all().at(0).sid === user.sid &&
+    User.all().at(0).cid !== user.cid, 
+    "user has been reloaded. Different cid.");
+  t.ok(User.all().at(1).sid === admin.sid &&
+    User.all().at(1).cid !== admin.cid, 
+    "admin has been reloaded. Different cid.");
+
+  t.ok(!Admin.all().at(0), 
+    "user has not been reloaded.");
+
+  User.all().reset();
+  Admin.all().reset();
+
+  Admin.all().storage().load();
+  
+  t.ok(User.all().at(0).sid === admin.sid &&
+    User.all().at(0).cid !== admin.cid, 
+    "admin has been reloaded. Different cid.");
+
+  t.ok(Admin.all().at(0).sid === admin.sid &&
+    Admin.all().at(0).cid !== admin.cid, 
+    "admin has been reloaded. Different cid.");
+
+  User.all().storage().load();
+
+  t.ok(User.all().at(0).sid === user.sid &&
+    User.all().at(0).cid !== user.cid, 
+    "user has been reloaded. Different cid.");
+
+  t.ok(User.all().at(1).sid === Admin.all().at(0).sid, 
+    "admin has been reloaded but is the same loaded before.");
+
+  t.ok(User.all().length === 2 &&
+    Admin.all().length === 1,
+    "Local cache length.");
 });
