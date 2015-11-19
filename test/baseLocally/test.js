@@ -15,11 +15,10 @@ var User = Backbone.Model.extend({
   storeName: "User"
 });
 
-var Admin = User.extend({  
+var Admin = Backbone.Model.extend({  
   url: "http://www.example.com/admin"
 }, {
-  storeName: "Admin",
-  parent: User
+  storeName: "Admin"
 });
 
 var Users = Backbone.Collection.extend({
@@ -693,8 +692,8 @@ test('Saves, fetches and destroys a local model.', function (t) {
 
 });
 
-test('Plays with model inheritance and reloads local cache from Storage.', function (t) {
-  t.plan(8);
+test('Stores and reloads local cache from Storage.', function (t) {
+  t.plan(2);
 
   // Models are created.
   var user = User.create();
@@ -714,36 +713,10 @@ test('Plays with model inheritance and reloads local cache from Storage.', funct
   t.ok(User.all().at(0).sid === user.sid &&
     User.all().at(0).cid !== user.cid, 
     "user has been reloaded. Different cid.");
-  t.ok(User.all().at(1).sid === admin.sid &&
-    User.all().at(1).cid !== admin.cid, 
-    "admin has been reloaded. Different cid.");
-
-  t.ok(!Admin.all().at(0), 
-    "user has not been reloaded.");
-
-  User.all().reset();
-  Admin.all().reset();
 
   Admin.all().storage().load();
-  
-  t.ok(User.all().at(0).sid === admin.sid &&
-    User.all().at(0).cid !== admin.cid, 
-    "admin has been reloaded. Different cid.");
 
   t.ok(Admin.all().at(0).sid === admin.sid &&
     Admin.all().at(0).cid !== admin.cid, 
     "admin has been reloaded. Different cid.");
-
-  User.all().storage().load();
-
-  t.ok(User.all().at(0).sid === user.sid &&
-    User.all().at(0).cid !== user.cid, 
-    "user has been reloaded. Different cid.");
-
-  t.ok(User.all().at(1).sid === Admin.all().at(0).sid, 
-    "admin has been reloaded but is the same loaded before.");
-
-  t.ok(User.all().length === 2 &&
-    Admin.all().length === 1,
-    "Local cache length.");
 });

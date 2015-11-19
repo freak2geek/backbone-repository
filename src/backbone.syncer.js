@@ -70,9 +70,9 @@ Backbone.Model = Backbone.Model.extend({
       });
     }
 
-    // Add the model to `all` for each constructor in its prototype chain.
+    // Add the model to `all`.
     var ctor = this.constructor;
-    do { ctor.all().add(this); } while (ctor = ctor.parent);
+    ctor.all().add(this);
 
   },
 
@@ -297,13 +297,6 @@ Backbone.Model = Backbone.Model.extend({
         model._validate({}, options);
 
       return model;
-    }
-    
-    // Throw if a model already exists with the same id in a superclass.
-    var parent = this;
-    while (parent = parent.parent) {
-      if (!parent.all().get(id)) continue;
-      throw new Error('Model with id "' + id + '" already exists.');
     }
 
     // Ensure attributes are parsed.

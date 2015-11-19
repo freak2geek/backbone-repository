@@ -90,26 +90,6 @@ test('Respect idAttribute.', function (t) {
 	t.end();
 });
 
-test('Add instances to inheritance chain', function(t) {
-  var a = Admin.create({id: 1});
-  var b = User.create({id: 1});
-  t.ok(a === b);
-  t.end();
-});
-
-test('Instantiating an existing object as a subclass throws.', function(t) {
-  var admin;
-  var user = User.create({id: 1});
-  t.throws(function() {
-    admin = Admin.create({id: 1});
-  }, function(e) {
-    return e.message === 'Model with id "1" already exists.';
-  });
-  t.ok(!Admin.all().include(admin));
-  t.ok(User.all().include(user));
-  t.end();
-});
-
 test('Overrides and execute an initialize method properly.', function (t) {
 	t.plan(3);
 	var Model = Backbone.Model.extend({
