@@ -2,7 +2,7 @@
 
 _.extend(Backbone.Syncer, {
   /**
-   * @property {String} [storagePrefix] 
+   * @property {String} [storagePrefix]
    * The prefix for using in all storages.
    */
   storagePrefix: undefined,
@@ -16,8 +16,23 @@ _.extend(Backbone.Syncer, {
    */
   storage: function() {
     return Storage();
+  },
+  /**
+   * Which keys must use for serializing model states.
+   */
+  serialKey: {
+    attributes:           0,
+    dirtiedAttributes:    1,
+    dirtyDestroyed:       2,
+    changes:              3,
+    previousAttributes:   4,
+    fetched:              5,
+    destroyed:            6,
+    sid:                  7
   }
 });
+
+var serialKey = Backbone.Syncer.serialKey;
 
 /**
  * Singleton variable for Locally's Store object.
@@ -35,7 +50,7 @@ var Storage = function () {
 };
 
 /**
- * Hash that contains current cids for local models 
+ * Hash that contains current cids for local models
  * identified by a sid (storage id).
  */
 var cids = {};
@@ -130,12 +145,12 @@ _.extend(ModelStorage.prototype, {
     options || (options = {});
 
     var storagePrefix = Backbone.Syncer.storagePrefix;
-    var storeName = 
+    var storeName =
       options.storeName ||
       _.result(this.model.constructor, 'storeName') ||
       storeNameError();
 
-    var idModel = 
+    var idModel =
       // In case there is already an internal id for the model,
       this.model.sid ||
       // if not the remote id is used,
@@ -166,21 +181,21 @@ _.extend(ModelStorage.prototype, {
    * @return {Object} Model serialized.
    */
   serialize: function (options) {
-    var serialized =  {
-      at: this.model.toJSON(_.extend({}, options, {
-        cid: false
-      })),
-      di: _.omit(this.model.dirtiedAttributes(), "cid"),
-      dd: this.model.isDirtyDestroyed(),
-      ch: _.omit(this.model.changedAttributes(), "cid"),
-      pr: _.omit(this.model.previousAttributes(), "cid"),
-      fe: this.model.isFetched(),
-      de: this.model.isDestroyed()
-    };
+    var serialized =  {};
+
+    serialized[serialKey.attributes] = this.model.toJSON(_.extend({}, options, {
+      cid: false
+    }));
+    serialized[serialKey.dirtiedAttributes] = _.omit(this.model.dirtiedAttributes(), "cid");
+    serialized[serialKey.dirtyDestroyed] = this.model.isDirtyDestroyed();
+    serialized[serialKey.changes] = _.omit(this.model.changedAttributes(), "cid");
+    serialized[serialKey.previousAttributes] = _.omit(this.model.previousAttributes(), "cid");
+    serialized[serialKey.fetched] = this.model.isFetched();
+    serialized[serialKey.destroyed] = this.model.isDestroyed();
 
     var sid = this.model.sid;
     if (sid) {
-      serialized.sid = sid;
+      serialized[serialKey.sid] = sid;
     }
 
     return serialized;
@@ -191,20 +206,20 @@ _.extend(ModelStorage.prototype, {
    * @param {Object} [object] The information to deserialize.
    */
   deserialize: function (serialized, options) {
-    var sid = serialized.sid;
+    var sid = serialized[serialKey.sid];
 
     this.model.sid = sid;
 
-    var attrs = serialized.at;
+    var attrs = serialized[serialKey.attributes];
 
     this.model.set(attrs, _.extend({}, options, {localStorage: false}));
 
-    this.model.dirtied = serialized.di;
-    this.model._dirtyDestroyed = serialized.dd;
-    this.model.changed = serialized.ch;
-    this.model._previousAttributes = serialized.pr;
-    this.model._fetched = serialized.fe;
-    this.model._destroyed = serialized.de;
+    this.model.dirtied = serialized[serialKey.dirtiedAttributes];
+    this.model._dirtyDestroyed = serialized[serialKey.dirtyDestroyed];
+    this.model.changed = serialized[serialKey.changes];
+    this.model._previousAttributes = serialized[serialKey.previousAttributes];
+    this.model._fetched = serialized[serialKey.fetched];
+    this.model._destroyed = serialized[serialKey.destroyed];
   }
 });
 
@@ -282,17 +297,17 @@ _.extend(CollectionStorage.prototype, {
    * @param {String} [options.storeName] StoreName to use.
    * @return {String} Key generated.
    */
-  key: function (options)  {    
+  key: function (options)  {
     options || (options = {});
 
     var storagePrefix = Backbone.Syncer.storagePrefix;
-    var storeName = 
+    var storeName =
       options.storeName ||
       _.result(this.collection, 'storeName') ||
       storeNameError();
 
     return storagePrefix+":"+storeName;
-  },  
+  },
 
   /**
    * Serializes the collection information to store.
@@ -332,16 +347,16 @@ _.extend(CollectionStorage.prototype, {
         // The model stored references to a new place of storage.
         var serializedModel = store.get(value);
         var sid, model;
-        if ((sid = serializedModel.sid)) {
+        if ((sid = serializedModel[serialKey.sid])) {
           // The model is a local one.
           var attrs = {};
 
           // Checks if it has already been instantiated.
           if (cids[sid]) {
             attrs.cid = cids[sid];
-          }          
-            
-          model = this.collection._prepareModel(attrs, 
+          }
+
+          model = this.collection._prepareModel(attrs,
           _.extend({}, options, {
             idAttribute: "id",
             cidAttribute: "cid"
@@ -350,13 +365,13 @@ _.extend(CollectionStorage.prototype, {
           // Ensures it will be instantiated once.
           model.sid = sid;
           cids[sid] = model[model.cidAttribute];
-        } else if (!_.isUndefined(serializedModel.at.id)) {
+        } else if (!_.isUndefined(serializedModel[serialKey.attributes].id)) {
           // The model is a remote one.
           var attrs = {};
 
-          attrs.id = serializedModel.at.id;
+          attrs.id = serializedModel[serialKey.attributes].id;
 
-          model = this.collection._prepareModel(attrs, 
+          model = this.collection._prepareModel(attrs,
           _.extend({}, options, {
             idAttribute: "id",
             cidAttribute: "cid"
@@ -387,9 +402,9 @@ var prevAllModel = Backbone.Model.prototype.constructor.all;
 /**
  * Extends Backbone.Model contructor to enable Locally.
  */
-_.extend(Backbone.Model.prototype.constructor, {  
+_.extend(Backbone.Model.prototype.constructor, {
   /**
-   * @property {string} [storeName=""] 
+   * @property {string} [storeName=""]
    * The keyname of the model storage.
    */
   storeName: undefined,
@@ -442,12 +457,12 @@ _.extend(Backbone.Model.prototype, {
    * Alters `set` to enable `localStorage` option.
    */
   set: function(key, val, options) {
-    if (key == null) {      
+    if (key == null) {
       options = val;
       if (options && options.localStorage) {
         this.storage().store(options.localStorage);
       }
-      
+
       return this;
     }
 
@@ -493,7 +508,7 @@ var prevDestroyCollection = Backbone.Collection.prototype.destroy;
 _.extend(Backbone.Collection.prototype, {
 
   /**
-   * @property {string} [storeName=""] 
+   * @property {string} [storeName=""]
    * The keyname of the collection storage.
    */
   storeName: undefined,
@@ -510,7 +525,7 @@ _.extend(Backbone.Collection.prototype, {
    */
   set: function(models, options) {
     var output = previousSetCollection.call(this, models, options);
-    
+
     if (options && options.localStorage) {
       this.storage().store(options.localStorage);
     }
