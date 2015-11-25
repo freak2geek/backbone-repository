@@ -586,7 +586,9 @@ test('Push method on Model. Destroy case.', function (t) {
     name: "Nacho"
   });
 
-  user.trigger("destroy", user);
+  user.destroy({
+    mode: "client"
+  });
 
   user.push({
     success: function (model, response, options) {
@@ -600,7 +602,9 @@ test('Push method on Model. Destroy case.', function (t) {
 
   var user2 = User.create();
 
-  user2.trigger("destroy", user2);
+  user2.destroy({
+    mode: "client"
+  });
 
   user2.push({
     error: function (model, response, options) {

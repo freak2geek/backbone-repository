@@ -4,6 +4,7 @@ var Model = Backbone.Model;
 
 var previousSet = Backbone.Model.prototype.set;
 var previousSave = Backbone.Model.prototype.save;
+var previousDestroy = Backbone.Model.prototype.destroy;
 var previousToJSON = Backbone.Model.prototype.toJSON;
 
 /**
@@ -52,23 +53,6 @@ Backbone.Model = Backbone.Model.extend({
 
     // Use `"cid"` for retrieving models by `attributes.cid`.
     this.set(this.cidAttribute, this.cid);
-
-    // On destroying the model it is marked
-    this.on("destroy", function(model) {
-      model._dirtyDestroyed = true;
-    });
-
-    // Versioning handler.
-    if(this.versionAttribute) {
-      this.on("change:"+this.versionAttribute,
-        function (model, newVersion, options) {
-          var currentVersion = model.previousAttributes()[model.versionAttribute];
-          if (options && options.version
-                && isLaterVersion(newVersion, currentVersion)) {
-            model._fetched = false;
-          }
-      });
-    }
 
     // Add the model to `all`.
     var ctor = this.constructor;
@@ -162,6 +146,16 @@ Backbone.Model = Backbone.Model.extend({
       _.extend(this.dirtied, _.omit(attrs, [this.idAttribute, this.cidAttribute]));
     }
 
+    // Versioning handler.
+    if(this.versionAttribute && attrs[this.versionAttribute]) {
+      var currentVersion = this.previousAttributes()[this.versionAttribute];
+      var newVersion = attrs[this.versionAttribute];
+      if (options && options.version
+            && isLaterVersion(newVersion, currentVersion)) {
+        this._fetched = false;
+      }
+    }
+
     return output;
   },
 
@@ -201,6 +195,24 @@ Backbone.Model = Backbone.Model.extend({
     }
 
     return previousSave.apply(this, [attrs, options]);
+  },
+
+  /**
+   * Alters destroy method to set diryDestroyed flag.
+   */
+  destroy: function(options) {
+    var model = this;
+    var success = options.success;
+
+    var wait = options.wait;
+    options.success = function(resp) {
+      if (wait) model._dirtyDestroyed = true;
+      if (success) success.call(options.context, model, resp, options);
+    };
+
+    if (!wait) model._dirtyDestroyed = true;
+
+    return previousDestroy.apply(this, [options]);
   },
 
   /**
