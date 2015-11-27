@@ -1,21 +1,3 @@
-var _ = require('underscore');
-var Backbone = require('backbone'),
-    najax = require('najax');
-
-Backbone.ajax = najax;
-
-require('../../tmp/<%= name %>');
-
-var User = Backbone.Model.extend({
-	url: "http://www.example.com/user",
-  versionAttribute: "version"
-});
-var Admin = User.extend({}, {parent: User});
-
-var Users = Backbone.Collection.extend({
-	url: "http://www.example.com/users"
-});
-
 var test = function(name, options, callback) {
   if (_.isFunction(options)) {
     callback = options;

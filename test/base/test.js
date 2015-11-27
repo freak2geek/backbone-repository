@@ -7,13 +7,16 @@ Backbone.ajax = najax;
 require('../../tmp/backbone.syncer');
 
 var User = Backbone.Model.extend({
-	url: "http://www.example.com/user",
+  url: "http://www.example.com/user",
   versionAttribute: "version"
 });
-var Admin = User.extend({}, {parent: User});
+
+var Admin = Backbone.Model.extend({
+  url: "http://www.example.com/admin"
+});
 
 var Users = Backbone.Collection.extend({
-	url: "http://www.example.com/users"
+  url: "http://www.example.com/users"
 });
 
 var test = function(name, options, callback) {

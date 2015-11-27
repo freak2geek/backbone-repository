@@ -4,7 +4,7 @@ var Backbone = require('backbone'),
 
 Backbone.ajax = najax;
 
-require('../../lib/supermodel.syncer.locally');
+require('../../tmp/supermodel.syncer');
 
 var User = Backbone.Model.extend({
 	url: "http://www.example.com/user",
@@ -14,14 +14,3 @@ var User = Backbone.Model.extend({
 var Users = Backbone.Collection.extend({
 	url: "http://www.example.com/users"
 });
-
-var test = function(name, options, callback) {
-  if (_.isFunction(options)) {
-    callback = options;
-    options = null;
-  }
-  require('tape')(name, options, function(t) {
-    User.reset();
-    callback(t);
-  });
-};
