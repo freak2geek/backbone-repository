@@ -1,4 +1,4 @@
-Backbone.Syncer = {
+var Syncer = {
   // Default backbone sync function.
 	backboneSync: Backbone.sync,
   // Hash containing sync modes registered.
@@ -32,3 +32,5 @@ Backbone.Syncer = {
 	ids_separator: ";",
 	VERSION:  '<%= version %>'
 };
+
+Backbone.Syncer = Syncer;

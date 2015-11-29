@@ -3,6 +3,7 @@
 var Model = Backbone.Model;
 
 var previousSet = Backbone.Model.prototype.set;
+var previousFetch = Backbone.Model.prototype.fetch;
 var previousSave = Backbone.Model.prototype.save;
 var previousDestroy = Backbone.Model.prototype.destroy;
 var previousToJSON = Backbone.Model.prototype.toJSON;
@@ -178,6 +179,18 @@ Backbone.Model = Backbone.Model.extend({
   },
 
   /**
+   * Alters fetch method.
+   */
+  fetch: function(options) {
+    options || (options = {});
+    _.defaults(options, {
+      mode: "server"
+    });
+
+    return previousFetch.apply(this, [options]);
+  },
+
+  /**
    * Alters save method to include changes being set as an option
    * for the Syncer method.
    */
@@ -191,6 +204,9 @@ Backbone.Model = Backbone.Model.extend({
     }
 
     options || (options = {});
+    _.defaults(options, {
+      mode: "server"
+    });
 
     if(options.patch) {
       options.changes = attrs;
@@ -205,6 +221,11 @@ Backbone.Model = Backbone.Model.extend({
    * Alters destroy method to set diryDestroyed flag.
    */
   destroy: function(options) {
+    options || (options = {});
+    _.defaults(options, {
+      mode: "server"
+    });
+
     var model = this;
     var success = options.success;
     var wait = options.wait;
@@ -417,6 +438,9 @@ Backbone.Collection = Backbone.Collection.extend({
    */
   fetch: function(options) {
     options = _.extend({parse: true}, options);
+    _.defaults(options, {
+      mode: "server"
+    });
 
     var success = options.success;
 
@@ -501,10 +525,6 @@ Backbone.Collection = Backbone.Collection.extend({
 
 });
 
-var backboneSync = Backbone.Syncer.backboneSync;
-
-var Syncer = {};
-
 /**
  * Syncer's logic for sync methods.
  */
@@ -515,13 +535,16 @@ var sync = function (method, model, options) {
 
   var mode = options.mode;
 
-  mode || (mode = 'server');
+  if (mode) {
+    var syncFn = Syncer.syncMode[mode];
 
-  var syncFn = syncMode[mode];
-  if (syncFn) {
-    syncFn.apply(options.context, [method, model, options]);
+    if (syncFn) {
+      return syncFn.apply(options.context, [method, model, options]);
+    } else {
+      throw new Error('The "mode" passed must be implemented.');
+    }
   } else {
-    throw new Error('The "mode" passed must be implemented.');
+    return Syncer.backboneSync.apply(options.context, [method, model, options]);
   }
 
 }
@@ -618,7 +641,7 @@ var serverSync = function (method, model, options) {
           if(success) success.call(options.context, response);
         };
 
-        return backboneSync.apply(this, [method, model, options]);
+        return Syncer.backboneSync.apply(this, [method, model, options]);
 
       case "delete":
         // Performs nothing in case the model is new.
@@ -637,7 +660,7 @@ var serverSync = function (method, model, options) {
           if(success) success.call(options.context, response);
         };
 
-        return backboneSync.apply(this, [method, model, options]);
+        return Syncer.backboneSync.apply(this, [method, model, options]);
 
       case "read":
         var success = options.success;
@@ -652,7 +675,7 @@ var serverSync = function (method, model, options) {
           if(success) success.call(options.context, response);
         };
 
-        return backboneSync.apply(this, [method, model, options]);
+        return Syncer.backboneSync.apply(this, [method, model, options]);
 
     }
 
@@ -688,7 +711,7 @@ var serverSync = function (method, model, options) {
           if(success) success.call(options.context, resp);
         };
 
-        return backboneSync.apply(this, [method, collection, options]);
+        return Syncer.backboneSync.apply(this, [method, collection, options]);
 
     }
 
@@ -702,7 +725,8 @@ var syncMode = {
   server: serverSync
 };
 
-Backbone.Syncer.register(syncMode);
+// Registers syncModes from the library.
+Syncer.register(syncMode);
 
 // Replaces the previous Backbone.sync method by the Syncer's one.
 Backbone.sync = sync;
