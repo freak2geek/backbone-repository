@@ -146,8 +146,9 @@ _.extend(ModelStorage.prototype, {
 
     var storagePrefix = Backbone.Syncer.storagePrefix;
     var storeName =
-      options.storeName ||
-      _.result(this.model.constructor, 'storeName') ||
+      options.storeName || // by option param
+      _.result(this.model, 'storeName') || // by model instance property
+      _.result(this.model.constructor, 'storeName') || // by static model property
       storeNameError();
 
     var idModel =
