@@ -140,9 +140,13 @@ Backbone.Model = Backbone.Model.extend({
 
     options || (options = {});
 
+    if(_.isUndefined(options.dirty)) {
+      options.dirty = true; // Default dirty option.
+    }
+
     var output = previousSet.call(this, attrs, options);
 
-    if(!options.remote) {
+    if(options.dirty) {
       _.extend(this.dirtied, _.omit(attrs, [this.idAttribute, this.cidAttribute]));
     }
 
@@ -595,8 +599,8 @@ var serverSync = function (method, model, options) {
 
         // Server mode.
         options.success = function (response) {
-          // A remote response.
-          options.remote = true;
+          // Avoids set to dirty server attributes.
+          options.dirty = false;
 
           // Marks the model as fetched in case it is a new one.
           if(method === "create") {
@@ -624,8 +628,8 @@ var serverSync = function (method, model, options) {
 
         // Server mode.
         options.success = function (response) {
-          // A remote response.
-          options.remote = true;
+          // Avoids set to dirty server attributes.
+          options.dirty = false;
 
           model.constructor.all().remove(model);
           model._destroyed = true;
@@ -640,8 +644,8 @@ var serverSync = function (method, model, options) {
 
         // Server mode & infinite mode with the model not fetched.
         options.success = function (response) {
-          // A remote response.
-          options.remote = true;
+          // Avoids set to dirty server attributes.
+          options.dirty = false;
 
           model._fetched = true;
 
@@ -664,8 +668,8 @@ var serverSync = function (method, model, options) {
 
         // Server mode.
         options.success = function (resp) {
-          // A remote response.
-          options.remote = true;
+          // Avoids set to dirty server attributes.
+          options.dirty = false;
 
           // Prepares the collection according to the passed option.
           var method = options.reset ? 'reset' : 'set';
