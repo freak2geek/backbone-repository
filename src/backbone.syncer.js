@@ -409,7 +409,7 @@ Backbone.Collection = Backbone.Collection.extend({
    */
   idsUrl: function (ids) {
     var url = _.result(this, 'url') || urlError();
-    return url+Backbone.Syncer.IDS_URL_SEPARATOR+ids.join(Backbone.Syncer.IDS_SEPARATOR);
+    return url+Backbone.Syncer.ids_url_separator+ids.join(Backbone.Syncer.ids_separator);
   },
 
   /**
@@ -702,9 +702,7 @@ var syncMode = {
   server: serverSync
 };
 
-_.extend(Backbone.Syncer, {
-  syncMode: syncMode
-});
+Backbone.Syncer.register(syncMode);
 
 // Replaces the previous Backbone.sync method by the Syncer's one.
 Backbone.sync = sync;
