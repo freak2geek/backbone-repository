@@ -1,5 +1,7 @@
 # Backbone.Syncer
 
+**The module is under development. It will be available soon.** 
+
 Backbone helper that alters and add manager methods to Backbone Model and Collection. Provides a local cache to track models and supports LocalStorage. For managing the LocalStorage, [Locally](https://github.com/ozantunca/locally) plugin is included in the library.
 
 ## Table of Contents
