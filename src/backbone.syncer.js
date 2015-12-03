@@ -183,9 +183,7 @@ Backbone.Model = Backbone.Model.extend({
    */
   fetch: function(options) {
     options || (options = {});
-    _.defaults(options, {
-      mode: "server"
-    });
+    _.defaults(options, {mode: Syncer.defaultMode()});
 
     return previousFetch.apply(this, [options]);
   },
@@ -204,9 +202,7 @@ Backbone.Model = Backbone.Model.extend({
     }
 
     options || (options = {});
-    _.defaults(options, {
-      mode: "server"
-    });
+    _.defaults(options, {mode: Syncer.defaultMode()});
 
     if(options.patch) {
       options.changes = attrs;
@@ -222,9 +218,7 @@ Backbone.Model = Backbone.Model.extend({
    */
   destroy: function(options) {
     options || (options = {});
-    _.defaults(options, {
-      mode: "server"
-    });
+    _.defaults(options, {mode: Syncer.defaultMode()});
 
     var model = this;
     var success = options.success;
@@ -283,7 +277,7 @@ Backbone.Model = Backbone.Model.extend({
    */
   push: function(options) {
     options || (options = {});
-    var options = _.extend(options, {mode: "server"});
+    _.defaults(options, {mode: Syncer.defaultMode()});
 
     if(this.isDirtyDestroyed()) {
       // Model is marked as destroyed, but in case is new, it won't be synchronized.
@@ -429,8 +423,7 @@ Backbone.Collection = Backbone.Collection.extend({
    * @return {String}
    */
   idsUrl: function (ids) {
-    var url = _.result(this, 'url') || urlError();
-    return url+Backbone.Syncer.ids_url_separator+ids.join(Backbone.Syncer.ids_separator);
+    return "/"+ids.join(";");
   },
 
   /**
@@ -438,9 +431,7 @@ Backbone.Collection = Backbone.Collection.extend({
    */
   fetch: function(options) {
     options = _.extend({parse: true}, options);
-    _.defaults(options, {
-      mode: "server"
-    });
+    _.defaults(options, {mode: Syncer.defaultMode()});
 
     var success = options.success;
 
@@ -460,37 +451,45 @@ Backbone.Collection = Backbone.Collection.extend({
    * Method to save all models from a collection.
    *
    * @param {Object} [options]
-   * @return {Array<Object>} xhrs
+   * @return {Array<Object>} outputs
    */
   save: function(options) {
     options || (options = {});
+    _.defaults(options, {mode: Syncer.defaultMode()});
 
-    var xhrs = [];
+    var outputs = [];
+
+    outputs.push(this.sync('create', this, options));
+
     this.each(function (model) {
-        var xhr = model.save([], options);
-        xhrs.push(xhr);
+        var output = model.save({}, options);
+        outputs.push(output);
     });
 
-    return xhrs;
+    return outputs;
   },
 
   /**
    * Method to destroy all models from a collection.
    *
    * @param {Object} [options]
-   * @return {Array<Object>} xhrs
+   * @return {Array<Object>} outputs
    */
   destroy: function(options) {
     options || (options = {});
+    _.defaults(options, {mode: Syncer.defaultMode()});
 
-    var xhrs = [];
+    var outputs = [];
+
+    outputs.push(this.sync('delete', this, options));
+
     var models = _.extend([], this.models);
     _.each(models, function (model) {
-      var xhr = model.destroy(options);
-      xhrs.push(xhr);
+      var output = model.destroy(options);
+      outputs.push(output);
     });
 
-    return xhrs;
+    return outputs;
   },
 
   /**
@@ -508,11 +507,9 @@ Backbone.Collection = Backbone.Collection.extend({
    * Method to push all models from a collection.
    *
    * @param {Object} [options]
-   * @return {Array<Object>} xhrs
+   * @return {Array<Object>} outputs
    */
   push: function(options) {
-    options || (options = {});
-
     var xhrs = [];
     var models = _.extend([], this.models);
     _.each(models, function (model) {
@@ -536,7 +533,7 @@ var sync = function (method, model, options) {
   var mode = options.mode;
 
   if (mode) {
-    var syncFn = Syncer.syncMode[mode];
+    var syncFn = Syncer.mode(mode);
 
     if (syncFn) {
       return syncFn.apply(options.context, [method, model, options]);
@@ -553,7 +550,17 @@ var sync = function (method, model, options) {
  * Sync method for client mode.
  */
 var clientSync = function (method, model, options) {
-  _.defer(options.success);
+  if(model instanceof Backbone.Model) {
+    _.defer(options.success);
+  } else if(model instanceof Backbone.Collection) {
+
+    var collection = model;
+    switch(method) {
+      case "read":
+        _.defer(options.success);
+        break;
+    }
+  }
 }
 
 /**
@@ -599,7 +606,7 @@ var infiniteSync = function (method, model, options) {
             return model.id;
         });
 
-        options.url = collection.idsUrl(idsToFetch);
+        options.url = _.result(collection, 'url')+collection.idsUrl(idsToFetch);
 
         return serverSync.apply(this, [method, collection, options]);
     }
@@ -727,6 +734,9 @@ var syncMode = {
 
 // Registers syncModes from the library.
 Syncer.register(syncMode);
+
+// Establish default mode.
+Syncer.defaultMode(serverSync);
 
 // Replaces the previous Backbone.sync method by the Syncer's one.
 Backbone.sync = sync;

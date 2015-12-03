@@ -53,8 +53,10 @@ test('Stores a model to Storage.', function (t) {
     name: "Nacho"
   });
 
-  // Using storage method.
-  user.storage().store();
+  // Using localStorage sync.
+  user.save({}, {
+    mode: "localStorage"
+  });
 
   serialized = Backbone.Syncer.storage().get(user.storage().key());
 
@@ -84,17 +86,23 @@ test('Removes a model from Storage.', function (t) {
     name: "Nacho"
   });
 
-  user.storage().store();
+  user.save({}, {
+    mode: "localStorage"
+  });
 
   // Using storage method.
-  user.storage().remove();
+  user.destroy({
+    mode: "localStorage"
+  });
 
   var serialized = Backbone.Syncer.storage().get(user.storage().key());
 
   t.ok(!serialized,
     "Model has been sucessfully remove from storage by a storage method.");
 
-  user.storage().store();
+  user.save({}, {
+    mode: "localStorage"
+  });
 
   // Using manager method.
   user.destroy({
@@ -133,13 +141,18 @@ test('Loads a model and all its state (dirtied, changed and previous attributes,
   // Forces being destroyed remotely.
   user._destroyed = true;
 
-  user.storage().store();
+  user.save({}, {
+    mode: "localStorage"
+  });
 
   // Saving state values
   var attributes = _.omit(user.attributes, "cid");
   var dirtied = _.omit(user.dirtiedAttributes(), "cid");
   var dirtiedDestroyed = user.isDirtyDestroyed();
-  var changed = _.omit(user.changedAttributes(), "cid");
+
+  var changed = user.changedAttributes();
+  delete changed.cid;
+
   var previous = _.omit(user.previousAttributes(), "cid");
   var fetched = user.isFetched();
   var destroyed = user.isDestroyed();
@@ -152,7 +165,9 @@ test('Loads a model and all its state (dirtied, changed and previous attributes,
   user._fetched = false;
   user._destroyed = false;
 
-  user.storage().load();
+  user.fetch({
+    mode: "localStorage"
+  });
 
   t.same(user.attributes, attributes,
     "Attributes have been recovered rightly.");
@@ -219,12 +234,16 @@ test('Stores and loads a collection from Storage by storage method.', function (
 
   var users = new Users([user, user2]);
 
-  users.storage().store();
+  users.save({
+    mode: "localStorage"
+  });
 
   // Clears collection.
   users.reset();
 
-  users.storage().load();
+  users.fetch({
+    mode: "localStorage"
+  });
 
   t.ok(users.get(user),
     "Model has been reloaded.");
@@ -246,14 +265,20 @@ test('Removes a collection from Storage by storage method.', function (t) {
 
   var users = new Users([user, user2]);
 
-  users.storage().store();
+  users.save({}, {
+    mode: "localStorage"
+  });
 
   // Clears collection.
   users.reset();
 
-  users.storage().remove();
+  user.destroy({
+    mode: "localStorage"
+  });
 
-  users.storage().load();
+  user.fetch({
+    mode: "localStorage"
+  });
 
   t.ok(!users.get(user),
     "Model is not longer in the collection.");
@@ -272,7 +297,9 @@ test('Set an empty collection to Storage by set method.', function (t) {
 
   var users = new Users([user, user2]);
 
-  users.storage().store();
+  users.save({}, {
+    mode: "localStorage"
+  });
 
   // Clears collection.
   users.reset();
@@ -281,7 +308,9 @@ test('Set an empty collection to Storage by set method.', function (t) {
     localStorage: true
   });
 
-  users.storage().load();
+  user.fetch({
+    mode: "localStorage"
+  });
 
   t.ok(!users.get(user),
     "Model is not longer in the collection.");
@@ -364,11 +393,15 @@ test('Stores a collection of local models to Storage and loads them back without
 
   var users = new Users([user, user2]);
 
-  users.storage().store();
+  users.save({
+    mode: "localStorage"
+  });
 
   var users = new Users();
 
-  users.storage().load();
+  users.fetch({
+    mode: "localStorage"
+  });
 
   t.ok(users.get(user),
     "Model has been reloaded.");
@@ -449,7 +482,9 @@ test('Saves remotely and Fetches an instance from Storage. Wait option.', functi
     error: function (model, response, options) {
       User.all().remove(user);
 
-      user.storage().load();
+      user.fetch({
+        mode: "localStorage"
+      });
 
       t.ok(!User.all().get(user),
         "Model has not been loaded from the storage as wait option.");
@@ -491,7 +526,9 @@ test('Saves remotely and Fetches an instance from Storage. No wait option.', fun
     error: function (model, response, options) {
       User.all().remove(user);
 
-      user.storage().load();
+      user.fetch({
+        mode: "localStorage"
+      });
 
       t.ok(User.all().get(user),
         "Model has been loaded again from storage.");
@@ -580,7 +617,9 @@ test('Saves locally, Destroys remotely and Fetches an instance from Storage. Wai
     error: function (model, response, options) {
       User.all().remove(user);
 
-      user.storage().load();
+      user.fetch({
+        mode: "localStorage"
+      });
 
       t.ok(User.all().get(user),
         "Model is still in the storage.");
@@ -700,21 +739,30 @@ test('Stores and reloads local cache from Storage.', function (t) {
   var admin = Admin.create();
 
   // Saving local cache to Storage.
-  User.all().storage().store();
-  Admin.all().storage().store();
+
+  User.all().save({
+    mode: "localStorage"
+  });
+  Admin.all().save({
+    mode: "localStorage"
+  });
 
   // Resets local cache.
   User.all().reset();
   Admin.all().reset();
 
   // Reloads models from Storage.
-  User.all().storage().load();
+  User.all().fetch({
+    mode: "localStorage"
+  });
 
   t.ok(User.all().at(0).sid === user.sid &&
     User.all().at(0).cid !== user.cid,
     "user has been reloaded. Different cid.");
 
-  Admin.all().storage().load();
+  Admin.all().fetch({
+    mode: "localStorage"
+  });
 
   t.ok(Admin.all().at(0).sid === admin.sid &&
     Admin.all().at(0).cid !== admin.cid,

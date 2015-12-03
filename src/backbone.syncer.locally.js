@@ -430,6 +430,7 @@ _.extend(Backbone.Model.prototype.constructor, {
 var prevInit = Backbone.Model.prototype.initialize;
 var previousSetModel = Backbone.Model.prototype.set;
 var prevFetchModel = Backbone.Model.prototype.fetch;
+var prevDestroyModel = Backbone.Model.prototype.destroy;
 
 /**
  * Extends Backbone.Model to enable Locally.
@@ -441,17 +442,6 @@ _.extend(Backbone.Model.prototype, {
    */
   storage: function() {
     return new ModelStorage(this);
-  },
-
-  initialize: function (options) {
-    prevInit.call(this, options);
-
-    // On destroying the model from localStorage.
-    this.on("destroy", function(model, collection, options) {
-      if (options && options.localStorage) {
-        this.storage().remove(options.localStorage);
-      }
-    }, this);
   },
 
   /**
@@ -493,15 +483,39 @@ _.extend(Backbone.Model.prototype, {
     }
 
     return prevFetchModel.call(this, options);
+  },
+
+  /**
+   * Alters `destroy` to enable `localStorage` option.
+   */
+  destroy: function (options) {
+    var model = this;
+    var success = options.success;
+
+    var destroyFromStorage = function() {
+      if (options && options.localStorage) {
+        model.storage().remove(options.localStorage);
+      }
+    };
+
+    var wait = options.wait;
+    options.success = function(resp) {
+      if (wait) destroyFromStorage();
+      if (success) success.call(options.context, model, resp, options);
+    };
+
+    if (!wait) destroyFromStorage();
+
+    return prevDestroyModel.call(this, options);
   }
 
 });
 
-var previousSetCollection = Backbone.Collection.prototype.set;
+var previousSetCollectionSyncer = Backbone.Collection.prototype.set;
 
-var prevFetchCollection = Backbone.Collection.prototype.fetch;
-var prevSaveCollection = Backbone.Collection.prototype.save;
-var prevDestroyCollection = Backbone.Collection.prototype.destroy;
+var prevFetchCollectionSyncer = Backbone.Collection.prototype.fetch;
+var prevSaveCollectionSyncer = Backbone.Collection.prototype.save;
+var prevDestroyCollectionSyncer = Backbone.Collection.prototype.destroy;
 
 /**
  * Extends Backbone.Collection to enable Locally.
@@ -525,7 +539,7 @@ _.extend(Backbone.Collection.prototype, {
    * Alters `set` to enable `localStorage` option.
    */
   set: function(models, options) {
-    var output = previousSetCollection.call(this, models, options);
+    var output = previousSetCollectionSyncer.call(this, models, options);
 
     if (options && options.localStorage) {
       this.storage().store(options.localStorage);
@@ -542,7 +556,7 @@ _.extend(Backbone.Collection.prototype, {
       this.storage().load(options.localStorage);
     }
 
-    return prevFetchCollection.call(this, options);
+    return prevFetchCollectionSyncer.call(this, options);
   },
 
   /**
@@ -553,7 +567,7 @@ _.extend(Backbone.Collection.prototype, {
       this.storage().store(options.localStorage);
     }
 
-    return prevSaveCollection.call(this, options);
+    return prevSaveCollectionSyncer.call(this, options);
   },
 
   /**
@@ -564,7 +578,7 @@ _.extend(Backbone.Collection.prototype, {
       this.storage().remove(options.localStorage);
     }
 
-    return prevDestroyCollection.call(this, options);
+    return prevDestroyCollectionSyncer.call(this, options);
   }
 
 });
@@ -586,3 +600,42 @@ function guid() {
 var storeNameError = function () {
   throw new Error('An "storeName" property or function must be specified for storage');
 };
+
+/**
+ * Sync method for localstorage mode.
+ */
+var localstorageSync = function (method, model, options) {
+  var success = options.success;
+  switch(method) {
+    case "create":
+    case "update":
+    case "patch":
+      model.storage().store(options);
+
+      if (success) {
+        _.defer(success);
+      }
+      break;
+
+    case "delete":
+      model.storage().remove(options);
+
+      if (success) {
+        _.defer(success);
+      }
+      break;
+
+    case "read":
+      model.storage().load(options);
+
+      if (success) {
+        _.defer(success);
+      }
+      break;
+
+  }
+
+}
+
+// Registers localstorage mode from the library.
+Syncer.register("localStorage", localstorageSync);

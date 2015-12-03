@@ -1,8 +1,6 @@
 var Syncer = {
   // Default backbone sync function.
 	backboneSync: Backbone.sync,
-  // Hash containing sync modes registered.
-  syncMode: {},
   /**
    * Registers a new sync mode.
    * @param {String|Object} [mode] Mode name or configuration {mode: fn}
@@ -10,9 +8,9 @@ var Syncer = {
    */
   register: function (mode, fn) {
     if (_.isObject(mode)) {
-      _.extend(this.syncMode, mode);
+      _.extend(syncModes, mode);
     } else {
-      this.syncMode[mode] = fn;
+      syncModes[mode] = fn;
     }
   },
   /**
@@ -20,17 +18,43 @@ var Syncer = {
    * @param {String} [mode] Mode name
    */
   unregister: function (mode) {
-    if (_.isUndefined(mode)) {
-      this.syncMode = {};
+    delete syncModes[mode];
+  },
+  /**
+   * Get sync mode method.
+   * @param {String} [mode] Mode name
+   */
+  mode: function (mode) {
+    if (_.isFunction(mode)) {
+      return mode;
+    }
+
+    return syncModes[mode];
+  },
+  /**
+   * Default mode.
+   * @param {String|Function} [mode] Mode name or fn
+   */
+  defaultMode: function (mode) {
+    if (!mode) {
+      return defaultMode;
     } else {
-      delete this.syncMode[mode];
+      defaultMode = mode;
     }
   },
-  // Default separator for collection's idsUrl
-	ids_url_separator: "/",
-  // Default separator for each model id in collection's idsUrl
-	ids_separator: ";",
+  /**
+   * Resets sync modes.
+   */
+  reset: function () {
+    syncModes = {};
+  },
 	VERSION:  '<%= version %>'
 };
+
+// Hash containing sync modes registered.
+var syncModes = {};
+
+// Private variable containing defaultMode
+var defaultMode;
 
 Backbone.Syncer = Syncer;
