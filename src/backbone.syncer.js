@@ -152,11 +152,12 @@ Backbone.Model = Backbone.Model.extend({
     }
 
     // Versioning handler.
-    if(this.versionAttribute && attrs[this.versionAttribute]) {
-      var currentVersion = this.previousAttributes()[this.versionAttribute];
+    if(options && options.version &&
+      this.versionAttribute && attrs[this.versionAttribute]) {
+
+      var previousVersion = this._previousAttributes[this.versionAttribute];
       var newVersion = attrs[this.versionAttribute];
-      if (options && options.version
-            && isLaterVersion(newVersion, currentVersion)) {
+      if (isLaterVersion(newVersion, previousVersion)) {
         this._fetched = false;
       }
     }
