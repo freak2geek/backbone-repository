@@ -73,21 +73,26 @@ test('Respect idAttribute.', function (t) {
 });
 
 test('Overrides and execute an initialize method properly.', function (t) {
-	t.plan(3);
+	t.plan(4);
 	var Model = Backbone.Model.extend({
-		initialize: function (options) {
+		initialize: function (attrs, options) {
+      this.attrs = attrs;
 			this.options = options;
 			t.pass();
 		}
 	});
 
+  var attrs = {};
 	var options = {
 		o1: 1
 	};
-	var model = Model.create({}, options);
+	var model = Model.create(attrs, options);
 
 	// Supermodel's initialize method has been executed firstly
 	t.ok(model.get(model.cidAttribute) == model.cid);
+
+  // Attrs has been passed as parameters through the overrided initialized method
+  t.ok(model.attrs === attrs);
 
 	// Options has been passed as parameters through the overrided initialized method
 	t.ok(model.options === options);

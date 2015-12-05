@@ -33,8 +33,8 @@ Backbone.Model = Backbone.Model.extend({
       // Composes new initialize method that contains
       // both library and customized initialize method
       this.initialize = _.wrap(Backbone.Model.prototype.initialize, function(backboneInit) {
-        backboneInit.call(self, arguments[2]);
-        overridedInit.call(self, arguments[2]);
+        backboneInit.apply(self, _.rest(arguments));
+        overridedInit.apply(self, _.rest(arguments));
       });
     }
 
