@@ -159,6 +159,9 @@ Backbone.Model = Backbone.Model.extend({
       var newVersion = attrs[this.versionAttribute];
       if (isLaterVersion(newVersion, previousVersion)) {
         this._fetched = false;
+
+        // triggers outdated event
+        this.trigger("outdated", this, newVersion, options);
       }
     }
 

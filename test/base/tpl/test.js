@@ -414,6 +414,32 @@ test('Save method is forced to affect version attribute. Server mode.', function
 
 });
 
+test('Triggers outdated event on version change.', function (t) {
+  t.plan(1);
+
+  var user = User.create({
+    id: 1
+  });
+
+  // Outdated event listener.
+  user.on("outdated", function (model, version, options) {
+    t.ok(model.get('version') === version);
+  });
+
+  // Version change is not being consider.
+  user.set({
+    version: 1
+  });
+
+  // Triggers version change.
+  user.set({
+    version: 2
+  }, {
+    version: true
+  });
+
+});
+
 test('Destroy method on Model. Client mode.', function (t) {
 	t.plan(1);
 
