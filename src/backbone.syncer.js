@@ -289,7 +289,7 @@ Backbone.Model = Backbone.Model.extend({
       return this.destroy(options);
     } else if(this.isNew()) {
       // Model is new, it will be created remotelly.
-      return this.save({}, options);
+      return this.save(null, options);
     } else if(this.hasDirtied()) {
       // Model has dirtied changes, it will be updated remotelly.
       return this.save(this.dirtiedAttributes(), options);
@@ -461,16 +461,16 @@ Backbone.Collection = Backbone.Collection.extend({
     options || (options = {});
     _.defaults(options, {mode: Syncer.defaultMode()});
 
-    var outputs = [];
+    var success = options.success;
+    options.originalSuccess = options.success;
 
-    outputs.push(this.sync('create', this, options));
+    var collection = this;
+    options.success = function(resp) {
+      if (success) success.call(options.context, collection, resp, options);
+      collection.trigger('sync', collection, resp, options);
+    };
 
-    this.each(function (model) {
-        var output = model.save({}, options);
-        outputs.push(output);
-    });
-
-    return outputs;
+    return this.sync('update', this, options);
   },
 
   /**
@@ -483,17 +483,16 @@ Backbone.Collection = Backbone.Collection.extend({
     options || (options = {});
     _.defaults(options, {mode: Syncer.defaultMode()});
 
-    var outputs = [];
+    var success = options.success;
+    options.originalSuccess = options.success;
 
-    outputs.push(this.sync('delete', this, options));
+    var collection = this;
+    options.success = function(resp) {
+      if (success) success.call(options.context, collection, resp, options);
+      collection.trigger('sync', collection, resp, options);
+    };
 
-    var models = _.extend([], this.models);
-    _.each(models, function (model) {
-      var output = model.destroy(options);
-      outputs.push(output);
-    });
-
-    return outputs;
+    return this.sync('delete', this, options);
   },
 
   /**
@@ -514,14 +513,10 @@ Backbone.Collection = Backbone.Collection.extend({
    * @return {Array<Object>} outputs
    */
   push: function(options) {
-    var xhrs = [];
-    var models = _.extend([], this.models);
+    var models = _.clone(this.models);
     _.each(models, function (model) {
-        var xhr = model.push(options);
-        xhrs.push(xhr);
+        model.push(options);
     });
-
-    return xhrs;
   }
 
 });
@@ -557,11 +552,21 @@ var clientSync = function (method, model, options) {
   if(model instanceof Backbone.Model) {
     _.defer(options.success);
   } else if(model instanceof Backbone.Collection) {
+    options.success = options.originalSuccess;
 
     var collection = model;
     switch(method) {
-      case "read":
-        _.defer(options.success);
+      case "create":
+      case "update":
+      case "patch":
+        collection.each(function (model) {
+          model.save(null, options);
+        });
+        break;
+      case "delete":
+        collection.each(function (model) {
+          model.destroy(options);
+        });
         break;
     }
   }
@@ -645,8 +650,9 @@ var serverSync = function (method, model, options) {
           _.each(options.changes, function (attrVal, attrKey) {
             var dirtiedVal = model.dirtied[attrKey];
 
-            if(dirtiedVal === attrVal)
+            if(dirtiedVal === attrVal) {
               delete model.dirtied[attrKey];
+            }
           });
 
           if(success) success.call(options.context, response);
@@ -723,6 +729,24 @@ var serverSync = function (method, model, options) {
         };
 
         return Syncer.backboneSync.apply(this, [method, collection, options]);
+
+      case "create":
+      case "update":
+      case "patch":
+        options.success = options.originalSuccess;
+
+        collection.each(function (model) {
+          model.save(null, options);
+        });
+        break;
+      case "delete":
+        options.success = options.originalSuccess;
+
+        var models = _.clone(collection.models);
+        _.each(models, function (model) {
+          model.destroy(options);
+        });
+        break;
 
     }
 
