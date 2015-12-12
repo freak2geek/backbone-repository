@@ -57,7 +57,7 @@ Backbone.Model = Backbone.Model.extend({
 
     // Add the model to `all`.
     var ctor = this.constructor;
-    ctor.all().add(this);
+    ctor.register().add(this);
 
   },
 
@@ -375,36 +375,36 @@ Backbone.Model = Backbone.Model.extend({
     var cid = attrs[this.prototype.cidAttribute];
     var id = attrs[this.prototype.idAttribute];
 
-    return (cid || id) && this.all().get(cid || id) || false;
+    return (cid || id) && this.register().get(cid || id) || false;
   },
 
   /**
    * Returns the collection that represents the local cache
    * of the model.
    */
-  all: function () {
-    if(!this._all) {
+  register: function () {
+    if(!this._register) {
       var Constructor = this;
-      var All = Backbone.Collection.extend({
+      var Register = Backbone.Collection.extend({
         model: Constructor
       });
 
-      var all = this._all = new All();
+      var register = this._register = new Register();
 
-      all.on("destroy", function(model) {
+      register.on("destroy", function(model) {
         if (model.isDirtyDestroyed() && !model.isDestroyed())
-          all.add(model, {silent: true});
+          register.add(model, {silent: true});
       });
     }
 
-    return this._all;
+    return this._register;
   },
 
   /**
    * Resets the local cache of the model.
    */
   reset: function () {
-    this.all().reset();
+    this.register().reset();
   }
 });
 
@@ -522,7 +522,7 @@ Backbone.Collection = Backbone.Collection.extend({
     });
 
     return xhrs;
-  },
+  }
 
 });
 
@@ -665,7 +665,7 @@ var serverSync = function (method, model, options) {
           // Avoids set to dirty server attributes.
           options.dirty = false;
 
-          model.constructor.all().remove(model);
+          model.constructor.register().remove(model);
           model._destroyed = true;
 
           if(success) success.call(options.context, response);

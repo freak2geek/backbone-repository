@@ -173,14 +173,14 @@ test('Saves locally and Fetches an instance from Storage.', function (t) {
     mode: "client",
     localStorage: true,
     success: function (model, response, options) {
-      User.all().remove(user);
+      User.register().remove(user);
       user.clearDirtied();
 
       user.fetch({
         mode: "client",
         localStorage: true,
         success: function (model, response, options) {
-          t.ok(User.all().get(user),
+          t.ok(User.register().get(user),
             "Model has been loaded again from storage.");
           t.ok(user.hasDirtied("name"),
             "Model has loaded its dirtied attributtes again.");
@@ -219,7 +219,7 @@ test('Stores and loads a collection from Storage by storage method.', function (
   t.ok(users.get(user2),
     "Model has been reloaded.");
 
-  t.same(User.all().length, 2,
+  t.same(User.register().length, 2,
     "Two models are still only created.");
 });
 
@@ -377,7 +377,7 @@ test('Stores a collection of local models to Storage and loads them back without
   t.ok(users.get(user2),
     "Model has been reloaded.");
 
-  t.same(User.all().length, 2,
+  t.same(User.register().length, 2,
     "Two models are still only created.");
 });
 
@@ -392,7 +392,7 @@ test('Fetchese remotelly and then Fetches an instance from Storage.', function (
     mode: "server",
     localStorage: true,
     success: function (model, response, options) {
-      User.all().remove(user);
+      User.register().remove(user);
 
       // Clear fetch status.
       user._fetched = false;
@@ -401,7 +401,7 @@ test('Fetchese remotelly and then Fetches an instance from Storage.', function (
         mode: "infinite",
         localStorage: true,
         success: function (model, response, options) {
-          t.ok(User.all().get(user),
+          t.ok(User.register().get(user),
             "Model has been loaded again from storage.");
 
           t.ok(model.isFetched(),
@@ -434,13 +434,13 @@ test('Saves remotely and Fetches an instance from Storage. Wait option.', functi
     localStorage: true,
     wait: true,
     success: function (model, response, options) {
-      User.all().remove(user);
+      User.register().remove(user);
 
       user.fetch({
         mode: "client",
         localStorage: true,
         success: function (model, response, options) {
-          t.ok(User.all().get(user),
+          t.ok(User.register().get(user),
             "Model has been loaded again from storage.");
           t.ok(!user.hasDirtied("name"),
             "Model has not dirtied attributtes.");
@@ -449,13 +449,13 @@ test('Saves remotely and Fetches an instance from Storage. Wait option.', functi
 
     },
     error: function (model, response, options) {
-      User.all().remove(user);
+      User.register().remove(user);
 
       user.fetch({
         mode: "localStorage"
       });
 
-      t.ok(!User.all().get(user),
+      t.ok(!User.register().get(user),
         "Model has not been loaded from the storage as wait option.");
 
       options.success();
@@ -478,13 +478,13 @@ test('Saves remotely and Fetches an instance from Storage. No wait option.', fun
     localStorage: true,
     wait: false,
     success: function (model, response, options) {
-      User.all().remove(user);
+      User.register().remove(user);
 
       user.fetch({
         mode: "client",
         localStorage: true,
         success: function (model, response, options) {
-          t.ok(User.all().get(user),
+          t.ok(User.register().get(user),
             "Model has been loaded again from storage.");
           t.ok(!user.hasDirtied(),
             "Model has not dirtied attributtes.");
@@ -493,13 +493,13 @@ test('Saves remotely and Fetches an instance from Storage. No wait option.', fun
 
     },
     error: function (model, response, options) {
-      User.all().remove(user);
+      User.register().remove(user);
 
       user.fetch({
         mode: "localStorage"
       });
 
-      t.ok(User.all().get(user),
+      t.ok(User.register().get(user),
         "Model has been loaded again from storage.");
       t.ok(user.hasDirtied("name"),
         "Model has dirtied attributtes.");
@@ -530,7 +530,7 @@ test('Saves locally, Destroys locally and Fetches an instance from Storage.', fu
     mode: "client",
     localStorage: true,
     success: function (model, response, options) {
-      User.all().remove(user);
+      User.register().remove(user);
 
       user.fetch({
         mode: "infinite",
@@ -539,7 +539,7 @@ test('Saves locally, Destroys locally and Fetches an instance from Storage.', fu
           t.fail();
         },
         error: function (model, response, options) {
-          t.ok(!User.all().get(user),
+          t.ok(!User.register().get(user),
             "Model has been removed from storage.");
         }
       });
@@ -571,26 +571,26 @@ test('Saves locally, Destroys remotely and Fetches an instance from Storage. Wai
     localStorage: true,
     wait: true,
     success: function (model, response, options) {
-      User.all().remove(user);
+      User.register().remove(user);
 
       user.fetch({
         mode: "client",
         localStorage: true,
         success: function (model, response, options) {
-          t.ok(!User.all().get(user),
+          t.ok(!User.register().get(user),
             "Model has been removed from storage.");
         }
       });
 
     },
     error: function (model, response, options) {
-      User.all().remove(user);
+      User.register().remove(user);
 
       user.fetch({
         mode: "localStorage"
       });
 
-      t.ok(User.all().get(user),
+      t.ok(User.register().get(user),
         "Model is still in the storage.");
 
       options.success();
@@ -619,7 +619,7 @@ test('Saves locally, Destroys remotely and Fetches an instance from Storage. No 
     localStorage: true,
     wait: false,
     success: function (model, response, options) {
-      User.all().remove(user);
+      User.register().remove(user);
 
       user.fetch({
         mode: "infinite",
@@ -628,14 +628,14 @@ test('Saves locally, Destroys remotely and Fetches an instance from Storage. No 
           t.fail();
         },
         error: function (model, response, options) {
-          t.ok(!User.all().get(user),
+          t.ok(!User.register().get(user),
             "Model has been removed from storage.");
         }
       });
 
     },
     error: function (model, response, options) {
-      User.all().remove(user);
+      User.register().remove(user);
 
       user.fetch({
         mode: "infinite",
@@ -644,7 +644,7 @@ test('Saves locally, Destroys remotely and Fetches an instance from Storage. No 
           t.fail();
         },
         error: function (model, response, options) {
-          t.ok(!User.all().get(user),
+          t.ok(!User.register().get(user),
             "Model has been removed from storage.");
         }
       });
@@ -667,13 +667,13 @@ test('Saves, fetches and destroys a local model.', function (t) {
     localStorage: true
   });
 
-  User.all().remove(user);
+  User.register().remove(user);
 
   user.fetch({
     mode: "client",
     localStorage: true,
     success: function (model, response, options) {
-      t.ok(User.all().get(user),
+      t.ok(User.register().get(user),
         "Model has been loaded again from storage.");
 
       user.destroy({
@@ -682,13 +682,13 @@ test('Saves, fetches and destroys a local model.', function (t) {
       });
 
       // Forces clear the model in the local cache.
-      User.all().remove(user);
+      User.register().remove(user);
 
       user.fetch({
         mode: "client",
         localStorage: true,
         success: function (model, response, options) {
-          t.ok(!User.all().get(user),
+          t.ok(!User.register().get(user),
             "Model has been removed from storage.");
         }
       });
@@ -709,31 +709,31 @@ test('Stores and reloads local cache from Storage.', function (t) {
 
   // Saving local cache to Storage.
 
-  User.all().save({
+  User.register().save({
     mode: "localStorage"
   });
-  Admin.all().save({
+  Admin.register().save({
     mode: "localStorage"
   });
 
   // Resets local cache.
-  User.all().reset();
-  Admin.all().reset();
+  User.register().reset();
+  Admin.register().reset();
 
   // Reloads models from Storage.
-  User.all().fetch({
+  User.register().fetch({
     mode: "localStorage"
   });
 
-  t.ok(User.all().at(0).sid === user.sid &&
-    User.all().at(0).cid !== user.cid,
+  t.ok(User.register().at(0).sid === user.sid &&
+    User.register().at(0).cid !== user.cid,
     "user has been reloaded. Different cid.");
 
-  Admin.all().fetch({
+  Admin.register().fetch({
     mode: "localStorage"
   });
 
-  t.ok(Admin.all().at(0).sid === admin.sid &&
-    Admin.all().at(0).cid !== admin.cid,
+  t.ok(Admin.register().at(0).sid === admin.sid &&
+    Admin.register().at(0).cid !== admin.cid,
     "admin has been reloaded. Different cid.");
 });

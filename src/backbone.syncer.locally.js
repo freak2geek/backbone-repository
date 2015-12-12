@@ -78,7 +78,7 @@ var ModelStorage = function (model) {
    * @property {Backbone.Model} [model] The model associated.
    */
   this.model = model;
-  this.localCache = model.constructor.all();
+  this.localCache = model.constructor.register();
 };
 
 _.extend(ModelStorage.prototype, {
@@ -398,7 +398,7 @@ _.extend(CollectionStorage.prototype, {
 });
 
 
-var prevAllModel = Backbone.Model.prototype.constructor.all;
+var prevAllModel = Backbone.Model.prototype.constructor.register;
 
 /**
  * Extends Backbone.Model contructor to enable Locally.
@@ -410,20 +410,20 @@ _.extend(Backbone.Model.prototype.constructor, {
    */
   storeName: undefined,
 
-  all: function () {
-    var all = prevAllModel.call(this);
+  register: function () {
+    var register = prevAllModel.call(this);
 
-    if(!all.storeName) {
-      all.storeName = this.storeName+":all";
+    if(!register.storeName) {
+      register.storeName = this.storeName+":register";
 
-      all.on("update", function (model, collection, options) {
+      register.on("update", function (model, collection, options) {
         if (options && options.localStorage) {
           this.storage().store();
         }
-      }, all);
+      }, register);
     }
 
-    return all;
+    return register;
   }
 });
 
