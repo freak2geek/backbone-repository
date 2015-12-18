@@ -381,7 +381,7 @@ test('Stores a collection of local models to Storage and loads them back without
     "Two models are still only created.");
 });
 
-test('Fetchese remotelly and then Fetches an instance from Storage.', function (t) {
+test('Fetches remotelly and then Fetches an instance from Storage.', function (t) {
   t.plan(2);
 
   var user = User.create({
@@ -397,8 +397,8 @@ test('Fetchese remotelly and then Fetches an instance from Storage.', function (
       // Clear fetch status.
       user._fetched = false;
 
-      user.fetch({
-        mode: "infinite",
+      user.pull({
+        mode: "server",
         localStorage: true,
         success: function (model, response, options) {
           t.ok(User.register().get(user),
@@ -532,8 +532,8 @@ test('Saves locally, Destroys locally and Fetches an instance from Storage.', fu
     success: function (model, response, options) {
       User.register().remove(user);
 
-      user.fetch({
-        mode: "infinite",
+      user.pull({
+        mode: "server",
         localStorage: true,
         success: function (model, response, options) {
           t.fail();
@@ -621,8 +621,8 @@ test('Saves locally, Destroys remotely and Fetches an instance from Storage. No 
     success: function (model, response, options) {
       User.register().remove(user);
 
-      user.fetch({
-        mode: "infinite",
+      user.pull({
+        mode: "server",
         localStorage: true,
         success: function (model, response, options) {
           t.fail();
@@ -637,8 +637,8 @@ test('Saves locally, Destroys remotely and Fetches an instance from Storage. No 
     error: function (model, response, options) {
       User.register().remove(user);
 
-      user.fetch({
-        mode: "infinite",
+      user.pull({
+        mode: "server",
         localStorage: true,
         success: function (model, response, options) {
           t.fail();

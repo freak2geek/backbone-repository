@@ -269,7 +269,14 @@ Backbone.Model = Backbone.Model.extend({
    */
   pull: function(options) {
     options || (options = {});
-    return this.fetch(_.extend(options, {mode: "infinite"}));
+    _.defaults(options, {mode: Syncer.defaultMode()});
+
+    if (this.isFetched()) {
+      _.defer(options.success, this, undefined, options);
+      return;
+    }
+
+    return this.fetch(options);
   },
 
   /**
@@ -437,18 +444,7 @@ Backbone.Collection = Backbone.Collection.extend({
     options = _.extend({parse: true}, options);
     _.defaults(options, {mode: Syncer.defaultMode()});
 
-    var success = options.success;
-
-    var collection = this;
-    options.success = function(resp) {
-      if (success) success.call(options.context, collection, resp, options);
-      collection.trigger('sync', collection, resp, options);
-    };
-
-    wrapError(this, options);
-
-    return this.sync('read', this, options);
-
+    return prevFetchCollection.apply(this, [options]);
   },
 
   /**
@@ -466,6 +462,8 @@ Backbone.Collection = Backbone.Collection.extend({
 
     var collection = this;
     options.success = function(resp) {
+      var method = options.reset ? 'reset' : 'set';
+      collection[method](resp, options);
       if (success) success.call(options.context, collection, resp, options);
       collection.trigger('sync', collection, resp, options);
     };
@@ -503,7 +501,28 @@ Backbone.Collection = Backbone.Collection.extend({
    */
   pull: function(options) {
     options || (options = {});
-    return this.fetch(_.extend(options, {mode: "infinite"}));
+    _.defaults(options, {mode: Syncer.defaultMode()});
+
+    var success = options.success;
+
+    options.remove = false;
+
+    options.modelsToFetch = this.filter(function (model) {
+      return !model.isNew() && !model.isFetched();
+    });
+
+    if(_.isEmpty(options.modelsToFetch)) {
+      _.defer(success, this, undefined, options);
+      return;
+    }
+
+    var idsToFetch = _.map(options.modelsToFetch, function (model) {
+        return model.id;
+    });
+
+    options.url = _.result(this, 'url')+this.idsUrl(idsToFetch);
+
+    return this.fetch(options);
   },
 
   /**
@@ -570,58 +589,6 @@ var clientSync = function (method, model, options) {
         break;
     }
   }
-}
-
-/**
- * Sync method for infinite mode.
- */
-var infiniteSync = function (method, model, options) {
-  if(model instanceof Backbone.Model) {
-
-    switch(method) {
-      case "read":
-        var success = options.success;
-
-        // Infinite mode.
-        if(model.isFetched()) {
-          // Model already fetched.
-          _.defer(success);
-          return;
-        }
-
-        return serverSync.apply(this, [method, model, options]);
-    }
-
-  } else if(model instanceof Backbone.Collection) {
-
-    var collection = model;
-
-    switch(method) {
-      case "read":
-        var success = options.success;
-
-        options.remove = false;
-
-        var modelsToFetch = collection.filter(function (model) {
-          return !model.isNew() && !model.isFetched();
-        });
-
-        if(_.isEmpty(modelsToFetch)) {
-          _.defer(success);
-          return;
-        }
-
-        var idsToFetch = _.map(modelsToFetch, function (model) {
-            return model.id;
-        });
-
-        options.url = _.result(collection, 'url')+collection.idsUrl(idsToFetch);
-
-        return serverSync.apply(this, [method, collection, options]);
-    }
-
-  }
-
 }
 
 /**
@@ -756,7 +723,6 @@ var serverSync = function (method, model, options) {
 
 var syncMode = {
   client: clientSync,
-  infinite: infiniteSync,
   server: serverSync
 };
 

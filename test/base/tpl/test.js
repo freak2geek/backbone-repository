@@ -98,8 +98,8 @@ test('Overrides and execute an initialize method properly.', function (t) {
 	t.ok(model.options === options);
 });
 
-test('Fetch method on Model. Infinite mode.', function (t) {
-	t.plan(3);
+test('Fetch method on Model. Client mode.', function (t) {
+	t.plan(2);
 
 	var user = User.create({
 		id: 1
@@ -109,21 +109,10 @@ test('Fetch method on Model. Infinite mode.', function (t) {
 		"User is not fetched yet.");
 
 	user.fetch({
-		mode: "infinite",
+    mode: "client",
     success: function (model, response, options) {
-      t.ok(user.isFetched(),
-        "User has been fetched by infinite mode.");
-
-      user.fetch({
-        mode: "infinite",
-        success: function (model, response, options) {
-          t.pass("User has been previously fetched. No server call needed.");
-        }
-      });
-    },
-		error: function (model, response, options) {
-			options.success();
-		}
+      t.pass();
+    }
 	});
 
 });
@@ -529,16 +518,24 @@ test('A destroyed model is earsed from local cache on server successful response
 });
 
 test('Pull method on Model.', function (t) {
-	t.plan(1);
+	t.plan(2);
 
 	var user = User.create({
 		id: 1
 	});
 
 	user.pull({
+    mode: "server",
     success: function (model, response, options) {
       t.ok(user.isFetched(),
         "User is fetched.");
+
+      user.pull({
+        mode: "server",
+        success: function (model, response, options) {
+          t.pass("User has been previously fetched. No server call needed.");
+        }
+      });
     },
 		error: function (model, response, options) {
 			options.success();
@@ -622,55 +619,6 @@ test('Push method on Model. Destroy case.', function (t) {
   user2.push({
     error: function (model, response, options) {
       t.fail("No method has to be sent.");
-    }
-  });
-
-});
-
-test('Fetch method on Collection. Infinite mode.', function (t) {
-  t.plan(7);
-
-  // Model to fetch
-  var user = User.create({
-    id: 1
-  });
-
-  // Model to fetch
-  var user2 = User.create({
-    id: 2
-  });
-
-  // Model to keep
-  var user3 = User.create();
-
-
-  // Fetched model
-  var user4 = User.create({
-    id: 4
-  });
-  user4._fetched = true;
-
-  var users = new Users([user, user2, user3, user4]);
-
-  t.ok(!user.isFetched(), "Model is not fetched.");
-  t.ok(!user2.isFetched(), "Model is not fetched.");
-
-  users.fetch({
-    mode: "infinite",
-    success: function (collection, response, options) {
-      t.same(options.url, collection.url+"/1;2", "The list of ids to fetch is set correctly at the url.");
-
-      t.ok(collection.get(1).isFetched(), "Model is fetched.");
-      t.ok(collection.get(2).isFetched(), "Model is fetched.");
-
-      t.ok(!_.isUndefined(collection.get(user3)), "Local model is kept in the collection.");
-      t.ok(!_.isUndefined(collection.get(user4)), "Fetched model is kept in the collection.");
-    },
-    error: function (collection, response, options) {
-      options.success([
-        {id: 1},
-        {id: 2}
-      ]);
     }
   });
 
@@ -836,24 +784,48 @@ test('Destroy method on Collection. Server mode.', function (t) {
 });
 
 test('Pull method on Collection.', function (t) {
-  t.plan(2);
+  t.plan(7);
 
   // Model to fetch
   var user = User.create({
     id: 1
   });
 
-  var users = new Users([user]);
+  // Model to fetch
+  var user2 = User.create({
+    id: 2
+  });
+
+  // Model to keep
+  var user3 = User.create();
+
+
+  // Fetched model
+  var user4 = User.create({
+    id: 4
+  });
+  user4._fetched = true;
+
+  var users = new Users([user, user2, user3, user4]);
 
   t.ok(!user.isFetched(), "Model is not fetched.");
+  t.ok(!user2.isFetched(), "Model is not fetched.");
 
   users.pull({
+    mode: "server",
     success: function (collection, response, options) {
+      t.same(options.url, collection.url+"/1;2", "The list of ids to fetch is set correctly at the url.");
+
       t.ok(collection.get(1).isFetched(), "Model is fetched.");
+      t.ok(collection.get(2).isFetched(), "Model is fetched.");
+
+      t.ok(!_.isUndefined(collection.get(user3)), "Local model is kept in the collection.");
+      t.ok(!_.isUndefined(collection.get(user4)), "Fetched model is kept in the collection.");
     },
     error: function (collection, response, options) {
       options.success([
-        {id: 1}
+        {id: 1},
+        {id: 2}
       ]);
     }
   });

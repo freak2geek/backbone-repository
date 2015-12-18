@@ -431,6 +431,7 @@ var prevInit = Backbone.Model.prototype.initialize;
 var previousSetModel = Backbone.Model.prototype.set;
 var prevFetchModel = Backbone.Model.prototype.fetch;
 var prevDestroyModel = Backbone.Model.prototype.destroy;
+var prevPullModel = Backbone.Model.prototype.pull;
 
 /**
  * Extends Backbone.Model to enable Locally.
@@ -507,6 +508,17 @@ _.extend(Backbone.Model.prototype, {
     if (!wait) destroyFromStorage();
 
     return prevDestroyModel.call(this, options);
+  },
+
+  /**
+   * Alters `pull` to enable `localStorage` option.
+   */
+  pull: function (options) {
+    if (options && options.localStorage) {
+      this.storage().load(options.localStorage);
+    }
+
+    return prevPullModel.call(this, options);
   }
 
 });
@@ -516,6 +528,7 @@ var previousSetCollectionSyncer = Backbone.Collection.prototype.set;
 var prevFetchCollectionSyncer = Backbone.Collection.prototype.fetch;
 var prevSaveCollectionSyncer = Backbone.Collection.prototype.save;
 var prevDestroyCollectionSyncer = Backbone.Collection.prototype.destroy;
+var prevPullCollectionSyncer = Backbone.Collection.prototype.pull;
 
 /**
  * Extends Backbone.Collection to enable Locally.
@@ -579,6 +592,17 @@ _.extend(Backbone.Collection.prototype, {
     }
 
     return prevDestroyCollectionSyncer.call(this, options);
+  },
+
+  /**
+   * Alters `pull` to enable `localStorage` option.
+   */
+  pull: function (options) {
+    if (options && options.localStorage) {
+      this.storage().load(options.localStorage);
+    }
+
+    return prevPullCollectionSyncer.call(this, options);
   }
 
 });
