@@ -6,7 +6,7 @@ Backbone extension that implements purposes of the Repository pattern which mean
 
 ## Table of Contents
 
-## Feature
+## Features
 ### Model register
 
 ### Sync mode
