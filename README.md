@@ -41,7 +41,7 @@ Backbone extension that implements purposes of the Repository pattern, which mea
 The library mainly supports the following features:
 
 * **Model register**: A *Collection* (C) keeps models instantiated.
-* **Sync modes**: *Sync modes* (m) are sync functions that are managed by a *Repository* (R).
+* **Sync modes**: *Sync modes* (m) are sync functions to different persistance layers that are managed by a *Repository* (R).
 * **Sync state and operations**: A *Model* (M) keeps changes to sync and run sync operations against a sync mode.
 
 ### Model register
