@@ -102,6 +102,12 @@ Backbone.Repository.setMode({
   mySyncMethod: syncStrategy
 });
 ```
+It is also possible to establish which mode will be selected by default.
+
+```javascript
+// Defaults a sync mode.
+Backbone.Repository.setDefaultMode("mySyncMethod");
+```
 
 ### Sync state
 The model prototype has been expanded to work up the Repository features intented.
