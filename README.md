@@ -6,7 +6,7 @@ Backbone extension that implements purposes of the Repository pattern, which mea
 
 ## Versions
 * **backbone-repository** - core library.
-* **backbone-respository-locally** - core library + localStorage support through the [Locally plugin](https://github.com/ozantunca/locally)
+* **backbone-respository-locally** - core library + localStorage support through the [Locally plugin](https://github.com/ozantunca/locally).
 
 ## Table of Contents
 - [Features](#features)
