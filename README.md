@@ -93,7 +93,7 @@ user === duplicate; // true
 user.get("name") === "Nacho"; // true
 ```
 
-Besides, collections will rely on the factory method to create the instances of the state class associated. So,
+Besides, collections will rely on the factory method to create the instances of the model class associated. So,
 
 ```javascript
 var Users = Backbone.Collection.extend({
