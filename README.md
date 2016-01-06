@@ -257,7 +257,7 @@ user.pull({
 ```
 
 #### Push method
-The push method performs a request whether destroy, create or update methods according to the sync status.
+The push method performs a request whether create, update or destroy methods according to the sync status.
 
 ```javascript
 // Create example
