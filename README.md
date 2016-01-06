@@ -4,12 +4,20 @@
 
 Backbone extension that implements purposes of the Repository pattern, which means the enhancement of the model management and synchronization, so as to provide strong features to build online, offline and hybrid web applications.
 
+![enter image description here](http://s30.postimg.org/xzax33qxt/diagrama_Con_Registro.png)
+
+The library mainly supports the following features:
+
+* **Model register**: A *Collection* (C) keeps models instantiated.
+* **Sync modes**: *Sync modes* (m) are sync functions to different data sources that are managed by a *Repository* (R).
+* **Sync state and operations**: A *Model* (M) keeps changes to sync and run sync operations against a sync mode.
+
 ## Versions
 * **backbone-repository** - core library.
 * **backbone-respository-locally** - core library + localStorage support through the [Locally plugin](https://github.com/ozantunca/locally).
 
 ## Table of Contents
-- [Features](#features)
+- [Usage](#usage)
 	- [Model register](#model-register)
 	- [Sync mode](#sync-mode)
 		- [Server mode](#server-mode)
@@ -61,15 +69,7 @@ Backbone extension that implements purposes of the Repository pattern, which mea
 - [Release History](#release-history)
 - [License](#license)
 
-## Features
-
-![enter image description here](http://s30.postimg.org/xzax33qxt/diagrama_Con_Registro.png)
-
-The library mainly supports the following features:
-
-* **Model register**: A *Collection* (C) keeps models instantiated.
-* **Sync modes**: *Sync modes* (m) are sync functions to different data sources that are managed by a *Repository* (R).
-* **Sync state and operations**: A *Model* (M) keeps changes to sync and run sync operations against a sync mode.
+## Usage
 
 ### Model register
 The extension implements a model caching strategy. By this, a model register in the form of a collection will be responsible for keeping in-memory all instantiated models.
