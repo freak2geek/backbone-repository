@@ -93,6 +93,16 @@ user === duplicate; // true
 user.get("name") === "Nacho"; // true
 ```
 
+Besides, collections will rely on the factory method to create the instances of the state class associated. So,
+
+```javascript
+var Users = Backbone.Collection.extend({
+  model: function(attrs, options) {
+      return User.create(attrs, options);
+  } 
+});
+```
+
 ### Sync mode
 A sync mode is responsible to provide logic to access to different data sources. There exists several predefined modes, but you are enable to configure your custom sync mode as well.
 
