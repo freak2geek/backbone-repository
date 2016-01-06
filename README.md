@@ -169,7 +169,7 @@ user.dirtiedAttributes(); // outputs {name: "Nacho"}
 The dirty handler may be turned off by passing dirty option to `set` method.
 
 ```javascript
-// The 'set' method automatically stores dirtied attributes.
+// The 'set' method won't store dirtied attributes.
 user.set({
     name: "Nacho"
 }, {
