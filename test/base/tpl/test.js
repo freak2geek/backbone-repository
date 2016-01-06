@@ -218,13 +218,13 @@ test('Dirtied attributes are cleaned on server successful response.', function (
     surname: "Codoñer"
   }, {
     success: function (model, response, options) {
-      t.same(user.dirtiedAttributes(), {
+      t.same(user.dirtiedAttributes(options), {
         age: 26,
         surname: "Gil"
       }, "Age and surname attribute are dirtied. Name is not as it has been successfully saved.");
     },
     error: function (model, response, options) {
-      t.same(user.dirtiedAttributes(), {
+      t.same(user.dirtiedAttributes(options), {
         name: "Nacho",
         surname: "Codoñer",
         age: 26
@@ -275,7 +275,9 @@ test('Fetch method is forced to affect version attribute. Server mode.', functio
   var user = User.create({
     id: 1
   });
-  user._fetched = true;
+
+  // Assumes the user has been fetched.
+  user._fetched["server"] = true;
 
   t.ok(user.isFetched(),
         "User is fetched.");
@@ -303,7 +305,9 @@ test('Save and set method do not affect version attribute.', function (t) {
     id: 1,
     version: 1
   });
-  user._fetched = true;
+
+  // Assumes the user has been fetched.
+  user._fetched["server"] = true;
 
   user.set({
     version: 2
@@ -324,36 +328,26 @@ test('Save and set method do not affect version attribute.', function (t) {
 
 });
 
-test('Save and set method affect version attribute.', function (t) {
-  t.plan(2);
+test('Set method affect version attribute.', function (t) {
+  t.plan(1);
 
   var user = User.create({
     id: 1,
     version: 1
   });
-  user._fetched = true;
+
+  // Assumes the user has been fetched.
+  user._fetched["server"] = true;
 
   user.set({
     version: 2
   }, {
+    mode: "server",
     version: true
   });
 
   t.ok(!user.isFetched(),
     "User is no longer fetched as a new version has been set.");
-
-  user._fetched = true;
-
-  user.save({
-    version: 3
-  }, {
-    mode: "client",
-    version: true,
-    success: function (model, response, options) {
-      t.ok(!user.isFetched(),
-        "User is no longer fetched as a new version has been set.");
-    }
-  });
 
 });
 
@@ -365,12 +359,14 @@ test('Save method does not affect version attribute. Server mode.', function (t)
     name: "Nacho",
     version: 1
   });
-  user._fetched = true;
+
+  // Assumes the user has been fetched.
+  user._fetched["server"] = true;
 
   user.save({}, {
     mode: "server",
     success: function (model, response, options) {
-      t.ok(user.isFetched(),
+      t.ok(user.isFetched(options),
         "User has not been modified its fetch status.");
     },
     error: function (model, response, options) {
@@ -390,7 +386,9 @@ test('Save method is forced to affect version attribute. Server mode.', function
     name: "Nacho",
     version: 1
   });
-  user._fetched = true;
+
+  // Assumes the user has been fetched.
+  user._fetched["server"] = true;
 
   user.save({}, {
     mode: "server",
@@ -644,7 +642,9 @@ test('Fetch method on Collection. Server mode.', function (t) {
   var user4 = User.create({
     id: 4
   });
-  user4._fetched = true;
+
+  // Assumes the user has been fetched.
+  user4._fetched["server"] = true;
 
   var users = new Users([user, user2, user3, user4]);
 
@@ -702,7 +702,9 @@ test('Fetch method is forced to affect version attribute. Collection case. Serve
     id: 1,
     version: 1
   });
-  user._fetched = true;
+
+  // Assumes the user has been fetched.
+  user._fetched["server"] = true;
 
   var users = new Users([user]);
 
@@ -804,7 +806,9 @@ test('Pull method on Collection.', function (t) {
   var user4 = User.create({
     id: 4
   });
-  user4._fetched = true;
+
+  // Assumes the user has been fetched.
+  user4._fetched["server"] = true;
 
   var users = new Users([user, user2, user3, user4]);
 

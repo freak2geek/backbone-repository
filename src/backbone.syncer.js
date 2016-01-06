@@ -44,13 +44,21 @@ Backbone.Model = Backbone.Model.extend({
   initialize: function () {
     var self = this;
 
-    this._fetched = false;
+    this._fetched = {};
     this.dirtied = {};
+
+    _.each(Backbone.Syncer.modes(), function (mode) {
+      this.dirtied[mode] = {};
+    }.bind(this));
+
     this._dirtyDestroyed = false;
-    this._destroyed = false;
+    this._destroyed = {};
 
     // Saving dirty attributes
-    _.extend(this.dirtied, _.omit(this.attributes, [this.idAttribute, this.cidAttribute]));
+    _.each(Backbone.Syncer.modes(), function (mode) {
+      this.dirtied[mode] || (this.dirtied[mode] = {});
+      _.extend(this.dirtied[mode], _.omit(this.attributes, [this.idAttribute, this.cidAttribute]));
+    }.bind(this));
 
     // Use `"cid"` for retrieving models by `attributes.cid`.
     this.set(this.cidAttribute, this.cid);
@@ -69,17 +77,19 @@ Backbone.Model = Backbone.Model.extend({
   versionAttribute: false,
 
   /**
-   * @property {boolean} [_fetched="false"] Flag that means if the model
-   * has been fetched remotely.
+   * @property {Object<String,Boolean>} [_fetched={}] Flag that means if the model
+   * has been fetched through a mode.
    */
-  _fetched: false,
+  _fetched: {},
 
   /**
-   * @return {boolean} 'true' if this model has been fetched remotely,
+   * @return {boolean} 'true' if this model has been fetched through the mode,
    * 'false' otherwise
    */
-  isFetched: function () {
-    return this._fetched;
+  isFetched: function (options) {
+    options || (options = {});
+    _.defaults(options, {mode: Syncer.defaultMode()});
+    return this._fetched[options.mode] || false;
   },
 
   /**
@@ -92,8 +102,11 @@ Backbone.Model = Backbone.Model.extend({
    * @return {Object} [dirtiedAttributes] Retrieve a copy of the attributes that have
    * changed since the last server synchronization.
    */
-  dirtiedAttributes: function() {
-    return _.clone(this.dirtied);
+  dirtiedAttributes: function(options) {
+    options || (options = {});
+    _.defaults(options, {mode: Syncer.defaultMode()});
+
+    return _.clone(this.dirtied[options.mode]) || {};
   },
 
   /**
@@ -101,9 +114,12 @@ Backbone.Model = Backbone.Model.extend({
    * @return {boolean} 'true' in case the model changed since its last sever
    * synchronization, 'false' otherwise
    */
-  hasDirtied: function (attr) {
-    if (attr == null) return !_.isEmpty(this.dirtied);
-    return _.has(this.dirtied, attr);
+  hasDirtied: function (attr, options) {
+    options || (options = {});
+    _.defaults(options, {mode: Syncer.defaultMode()});
+
+    if (attr == null) return !_.isEmpty(this.dirtied[options.mode]);
+    return _.has(this.dirtied[options.mode], attr);
   },
 
   /**
@@ -124,7 +140,9 @@ Backbone.Model = Backbone.Model.extend({
    * Erases dirtied changes of the model, whether attribute change or model destroy.
    */
   clearDirtied: function() {
-    this.dirtied = {};
+    _.each(this.dirtied, function (value, key) {
+      this.dirtied[key] = {}
+    }.bind(this));
     this.dirtiedDestroyed = false;
   },
 
@@ -148,7 +166,10 @@ Backbone.Model = Backbone.Model.extend({
     var output = previousSet.call(this, attrs, options);
 
     if(options.dirty) {
-      _.extend(this.dirtied, _.omit(attrs, [this.idAttribute, this.cidAttribute]));
+      _.each(Backbone.Syncer.modes(), function (mode) {
+        this.dirtied[mode] || (this.dirtied[mode] = {});
+        _.extend(this.dirtied[mode], _.omit(attrs, [this.idAttribute, this.cidAttribute]));
+      }.bind(this));
     }
 
     // Versioning handler.
@@ -158,7 +179,11 @@ Backbone.Model = Backbone.Model.extend({
       var previousVersion = this._previousAttributes[this.versionAttribute];
       var newVersion = attrs[this.versionAttribute];
       if (isLaterVersion(newVersion, previousVersion)) {
-        this._fetched = false;
+        var mode = options.mode;
+
+        if(mode) {
+          this._fetched[mode] = false;
+        }
 
         // triggers outdated event
         this.trigger("outdated", this, newVersion, options);
@@ -169,17 +194,19 @@ Backbone.Model = Backbone.Model.extend({
   },
 
   /**
-   * @property {boolean} [_destroyed="false"] Flag that means if the model
-   * has been destroyed remotely.
+   * @property {boolean} [_destroyed={}] Flag that means if the model
+   * has been destroyed against the sync mode.
    */
-  _destroyed: false,
+  _destroyed: {},
 
   /**
-   * @return {boolean} 'true' if this model has been destroyed remotely,
+   * @return {boolean} 'true' if this model has been destroyed against the sync mode,
    * 'false' otherwise
    */
-  isDestroyed: function () {
-    return this._destroyed;
+  isDestroyed: function (options) {
+    options || (options = {});
+    _.defaults(options, {mode: Syncer.defaultMode()});
+    return this._destroyed[options.mode] || false;
   },
 
   /**
@@ -188,7 +215,6 @@ Backbone.Model = Backbone.Model.extend({
   fetch: function(options) {
     options || (options = {});
     _.defaults(options, {mode: Syncer.defaultMode()});
-
     return previousFetch.apply(this, [options]);
   },
 
@@ -271,7 +297,8 @@ Backbone.Model = Backbone.Model.extend({
     options || (options = {});
     _.defaults(options, {mode: Syncer.defaultMode()});
 
-    if (this.isFetched()) {
+    var mode = options.mode;
+    if (this.isFetched(options)) {
       _.defer(options.success, this, undefined, options);
       return;
     }
@@ -288,7 +315,6 @@ Backbone.Model = Backbone.Model.extend({
    */
   push: function(options) {
     options || (options = {});
-    _.defaults(options, {mode: Syncer.defaultMode()});
 
     if(this.isDirtyDestroyed()) {
       // Model is marked as destroyed, but in case is new, it won't be synchronized.
@@ -297,9 +323,9 @@ Backbone.Model = Backbone.Model.extend({
     } else if(this.isNew()) {
       // Model is new, it will be created remotelly.
       return this.save(null, options);
-    } else if(this.hasDirtied()) {
+    } else if(this.hasDirtied(null, options)) {
       // Model has dirtied changes, it will be updated remotelly.
-      return this.save(this.dirtiedAttributes(), options);
+      return this.save(this.dirtiedAttributes(options), options);
     }
   },
 
@@ -550,6 +576,9 @@ var sync = function (method, model, options) {
 
   var mode = options.mode;
 
+  // Wrap success function to handle model states for the mode.
+  wrapSuccess(method, model, options);
+
   if (mode) {
     var syncFn = Syncer.mode(mode);
 
@@ -564,10 +593,106 @@ var sync = function (method, model, options) {
 
 }
 
+var wrapSuccess = function (method, model, options) {
+  var mode = options.mode;
+
+  if(model instanceof Backbone.Model) {
+
+    switch(method) {
+      case "create":
+      case "update":
+      case "patch":
+        var success = options.success;
+
+        options.success = function (response) {
+          // Marks the model as fetched in case it is a new one.
+          if(method === "create") {
+            model._fetched[mode] = true;
+          }
+
+          // Resolves attributes marked as dirtied.
+          _.each(options.changes, function (attrVal, attrKey) {
+            var dirtiedVal = model.dirtied[mode][attrKey];
+
+            if(dirtiedVal === attrVal) {
+              delete model.dirtied[mode][attrKey];
+            }
+          });
+
+          if(success) success.call(options.context, response);
+        };
+
+        break;
+
+      case "delete":
+        var success = options.success;
+
+        // Server mode.
+        options.success = function (response) {
+          model._destroyed[mode] = true;
+
+          if(success) success.call(options.context, response);
+        };
+
+        break;
+
+      case "read":
+        var success = options.success;
+
+        options.success = function (resp) {
+          model._fetched[mode] = true;
+
+          if(success) success.call(options.context, resp);
+        };
+
+        break;
+
+    }
+
+  } /*else if(model instanceof Backbone.Collection) {
+
+    var collection = model;
+
+    switch(method) {
+      case "read":
+        var success = options.success;
+
+        options.remove = false;
+
+        // Server mode.
+        options.success = function (resp) {
+          // Avoids set to dirty server attributes.
+          options.dirty = false;
+
+          // Prepares the collection according to the passed option.
+          var method = options.reset ? 'reset' : 'set';
+          collection[method](resp, options);
+
+          // Marks responsed models as fetched.
+          var models = resp;
+          _.each(models, function (value) {
+            var model = collection.get(value);
+            model._fetched = true;
+          });
+
+          // Marks the collection as fetched.
+          collection.fetched = true;
+
+          if(success) success.call(options.context, resp);
+        };
+
+        return Syncer.backboneSync.apply(this, [method, collection, options]);
+
+    }
+  }*/
+}
+
 /**
  * Sync method for client mode.
  */
 var clientSync = function (method, model, options) {
+  var mode = options.mode;
+
   if(model instanceof Backbone.Model) {
     _.defer(options.success);
   } else if(model instanceof Backbone.Collection) {
@@ -595,6 +720,8 @@ var clientSync = function (method, model, options) {
  * Sync method for server mode.
  */
 var serverSync = function (method, model, options) {
+  var mode = options.mode;
+
   if(model instanceof Backbone.Model) {
 
     switch(method) {
@@ -608,20 +735,6 @@ var serverSync = function (method, model, options) {
           // Avoids set to dirty server attributes.
           options.dirty = false;
 
-          // Marks the model as fetched in case it is a new one.
-          if(method === "create") {
-            model._fetched = true;
-          }
-
-          // Resolves attributes marked as dirtied.
-          _.each(options.changes, function (attrVal, attrKey) {
-            var dirtiedVal = model.dirtied[attrKey];
-
-            if(dirtiedVal === attrVal) {
-              delete model.dirtied[attrKey];
-            }
-          });
-
           if(success) success.call(options.context, response);
         };
 
@@ -631,33 +744,16 @@ var serverSync = function (method, model, options) {
         // Performs nothing in case the model is new.
         if (model.isNew()) return false;
 
-        var success = options.success;
+        // Avoids set to dirty server attributes.
+        options.dirty = false;
 
-        // Server mode.
-        options.success = function (response) {
-          // Avoids set to dirty server attributes.
-          options.dirty = false;
-
-          model.constructor.register().remove(model);
-          model._destroyed = true;
-
-          if(success) success.call(options.context, response);
-        };
+        model.constructor.register().remove(model);
 
         return Syncer.backboneSync.apply(this, [method, model, options]);
 
       case "read":
-        var success = options.success;
-
-        // Server mode & infinite mode with the model not fetched.
-        options.success = function (response) {
-          // Avoids set to dirty server attributes.
-          options.dirty = false;
-
-          model._fetched = true;
-
-          if(success) success.call(options.context, response);
-        };
+        // Avoids set to dirty server attributes.
+        options.dirty = false;
 
         return Syncer.backboneSync.apply(this, [method, model, options]);
 
@@ -686,7 +782,7 @@ var serverSync = function (method, model, options) {
           var models = resp;
           _.each(models, function (value) {
             var model = collection.get(value);
-            model._fetched = true;
+            model._fetched[mode] = true;
           });
 
           // Marks the collection as fetched.
@@ -730,7 +826,7 @@ var syncMode = {
 Syncer.register(syncMode);
 
 // Establish default mode.
-Syncer.defaultMode(serverSync);
+Syncer.defaultMode("server");
 
 // Replaces the previous Backbone.sync method by the Syncer's one.
 Backbone.sync = sync;

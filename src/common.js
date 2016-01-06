@@ -2,6 +2,12 @@ var Syncer = {
   // Default backbone sync function.
 	backboneSync: Backbone.sync,
   /**
+   * Returns an array with the sync mode names.
+   */
+  modes : function () {
+    return _.keys(syncModes);
+  },
+  /**
    * Registers a new sync mode.
    * @param {String|Object} [mode] Mode name or configuration {mode: fn}
    * @param {Function} [fn] Sync method
@@ -39,7 +45,13 @@ var Syncer = {
     if (!mode) {
       return defaultMode;
     } else {
-      defaultMode = mode;
+      if (_.isFunction(mode)) {
+        defaultMode = _.findKey(syncModes, function (value) {
+          return (value === mode);
+        });
+      } else {
+        defaultMode = mode;
+      }
     }
   },
   /**
