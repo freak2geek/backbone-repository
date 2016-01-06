@@ -70,7 +70,7 @@ user.get("name") === "Nacho"; // true
 ### Sync mode
 A sync mode is responsible to provide logic to access to different data sources. There exists several predefined modes, but you are enable to configure your custom sync mode as well.
 
-For using a mode, you must pass the mode as an option for every single sync operation.
+For using a mode, you must pass the mode as an option for every single sync operation, whether fetch, update, destroy, pull, push or check.
 
 ```javascript
 // E.g. fetching operation from server mode
@@ -205,7 +205,7 @@ user.isFetched(); // false, the version has changed.
 ```
 
 ### Sync operations
-Along with predefined sync operations you can perform from a model such as fetch, save and destroy, the extension implements two useful methods: pull and push.
+Along with predefined sync operations you can perform from a model such as fetch, save and destroy, the extension implements two useful methods: pull, push and check.
 
 By default, all sync operations use the server mode, but it may use another one just by passing the mode as parameter.
 
@@ -266,10 +266,179 @@ user.push({
 });
 ```
 
+#### Check method
+The check method is devised to fetch only a model version attribute and check the model is up to date. This has the sense to be used with remote sync modes. The server mode is configured to accept the `checkUrl`, which represent the checking endpoint.
+
+```javascript
+var User = Backbone.Model.extend({
+  versionAttribute: "version",
+  checkUrl: "A_CHECKING_ENDPOINT"
+});
+
+var user = User.create({
+	id: 1,
+    version: 1
+});
+
+// Assuming that the user is already fetched
+user.isFetched(); // true
+
+user.check({
+	mode: "server",
+    success: function (model, response, options) {
+    	// Lets assume a new version is available,        
+        // then the user is about to be fetched again.
+        user.isFetched(); // false
+    }
+});
+```
+This method meant to be useful using through a **Collection** since you will verify the models all at once.
+
 ## Reference API
+
 ### Backbone.Repository
+
+#### modes `Backbone.Repository.modes()`
+Returns an array with the name of the available modes.
+
+#### setMode `Backbone.Repository.setMode(name, [fn])`
+Establish a new mode by provinding its name and sync function.
+
+Available parameters:
+* name {String|Object} The mode name or an object containing the name and sync function.
+* fn {Function} The sync function
+
+#### getMode `Backbone.Repository.getMode(name)`
+Returns the sync function of the provided mode.
+
+Available parameters:
+* name {String} The mode name.
+
+#### setDefaultMode `Backbone.Repository.setDefaultMode(name)`
+Establish which mode will be used by default.
+
+Available parameters:
+* name {String} The mode name.
+
+#### getDefaultMode `Backbone.Repository.getDefaultMode()`
+Returns the default mode.
+
 ### Backbone.Model
+
+#### create `Backbone.Model.create(attrs, [options])`
+Factory method that returns a model instance and ensures only one is gonna be created with same id.
+
+Available parameters:
+* attrs {Object} The attributes for the new instance.
+* options {Object} The options for the new instance.
+
+#### find `Backbone.Model.find(attrs)`
+Returns a model by its id or cid from the local cache of the model.
+
+Available parameters:
+* attrs {Object} An id or cid for looking up.
+
+#### register `Backbone.Model.register()`
+Returns the collection that represents the local cache of the model.
+
+#### reset `Backbone.Model.reset()`
+Resets the local cache of the model.
+
+----
+#### isFetched `model.isFetched([options])`
+Returns `true` whether this model has been fetched through the sync mode or `false` otherwise.
+
+Available parameters:
+* options.mode {String} [mode=defaultMode] The sync mode name for checking.
+
+#### dirtied `model.dirtied`
+Internal hash containing all attributes that have changed since the last sync for each sync mode.
+
+#### dirtiedAttributes `model.dirtiedAttributes([options])`
+Retrieve a copy of the attributes that have changed since the last sync.
+
+Available parameters:
+* options.mode {String} [mode=defaultMode] The sync mode name.
+
+#### hasDirtied `model.hasDirtied([options])`
+Returns `true` in case the model changed since its last sync, `false` otherwise.
+
+Available parameters:
+* options.mode {String} [mode=defaultMode] The sync mode name.
+
+#### isDirtyDestroyed `model.isDirtyDestroyed()`
+Returns `true` if this model has been destroyed locally, `false` otherwise.
+
+#### clearDirtied `model.clearDirtied()`
+Erases dirtied changes of the model, whether attribute change or model destroy.
+
+#### set `model.set(attrs, [options])`
+Alters set method to provide new options.
+
+Available parameters:
+* options.dirty {Boolean} [dirty=true] Whether to handle dirtied changes or not.
+* options.version {Boolean} [version=true] Whether to handle version changes or not.
+
+#### isDestroyed `model.isDestroyed([options])`
+Returns `true` if this model has been destroyed remotely, `false` otherwise.
+
+Available parameters:
+* options.mode {String} [mode=defaultMode] The sync mode name.
+
+#### pull `model.pull([options])`
+Fetches the model using the sync mode selected if it has not been fetched before.
+
+Available parameters:
+* options.mode {String} [mode=defaultMode] The sync mode name.
+
+#### push `model.push([options])`
+Pushes the changes performed to the model using the sync mode selected. It may emitt create, update or destroy operations.
+
+Available parameters:
+* options.mode {String} [mode=defaultMode] The sync mode name.
+
+#### checkUrl `model.checkUrl`
+The checking endpoint in the server mode.
+
+#### check `model.check([options])`
+Fetches version attribute of the model and checks the uptodate status.
+
+Available parameters:
+* options.mode {String} [mode=defaultMode] The sync mode name.
+* options.checkUrl {String} The checking endpoint in the server mode.
+
 ### Backbone.Collection
+
+#### save `collection.save(attrs, [options])`
+Saves the whole collection using the sync mode. The server mode emitts one request per model.
+
+Available parameters:
+* options.mode {String} [mode=defaultMode] The sync mode name.
+
+#### destroy `collection.destroy([options])`
+Destroys the whole collection using the sync mode. The server mode emitts one request per model.
+
+Available parameters:
+* options.mode {String} [mode=defaultMode] The sync mode name.
+
+#### pull `collection.pull([options])`
+Pulls the whole collection using the sync mode. The server mode may emit urls that take the form of url+ subset of ids for fetching separated by comma.
+
+Available parameters:
+* options.mode {String} [mode=defaultMode] The sync mode name.
+
+#### push `collection.push([options])`
+Pushes the changes of the whole collection using the sync mode. The server mode emitts one request per model.
+
+Available parameters:
+* options.mode {String} [mode=defaultMode] The sync mode name.
+
+#### check `collection.check([options])`
+Checks the whole collection using the sync mode.
+
+Available parameters:
+* options.mode {String} [mode=defaultMode] The sync mode name.
+* options.checkUrl {String} The checking endpoint in the server mode.
 
 ## Building and Testing
 First install locally all the required development dependencies.
