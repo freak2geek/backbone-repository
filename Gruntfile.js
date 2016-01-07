@@ -11,20 +11,12 @@ module.exports = function (grunt) {
 		pkg: grunt.file.readJSON('package.json'),
 		subpkg: {
 			base: {
-				title: "Backbone.Syncer",
-				name: "backbone.syncer"
+				title: "backbone-repository",
+				name: "backbone-repository"
 			},
 			baseLocally: {
-				title: "Backbone.Syncer.Locally",
-				name: "backbone.syncer.locally"
-			},
-			supermodel: {
-				title: "Supermodel.Syncer",
-				name: "supermodel.syncer"
-			},
-			supermodelLocally: {
-				title: "Backbone.Syncer",
-				name: "supermodel.syncer.locally"
+				title: "backbone-repository-Locally",
+				name: "backbone-repository-locally"
 			}
 		},
 		meta: {
@@ -51,15 +43,7 @@ module.exports = function (grunt) {
 			baseLocally: [
 				'lib/<%= subpkg.baseLocally.name %>.js',
 				'lib/<%= subpkg.baseLocally.name %>.min.js'
-			],
-			supermodel: [
-				'lib/<%= subpkg.supermodel.name %>.js',
-				'lib/<%= subpkg.supermodel.name %>.min.js'
-			],
-			supermodelLocally: [
-				'lib/<%= subpkg.supermodelLocally.name %>.js',
-				'lib/<%= subpkg.supermodelLocally.name %>.min.js'
-			],
+			]
 		},
 		preprocess: {
 			base: {
@@ -69,14 +53,6 @@ module.exports = function (grunt) {
 			baseLocally: {
 				src: 'src/bundle/<%= subpkg.baseLocally.name %>.js',
 				dest: 'tmp/<%= subpkg.baseLocally.name %>.js'
-			},
-			supermodel: {
-				src: 'src/bundle/<%= subpkg.supermodel.name %>.js',
-				dest: 'tmp/<%= subpkg.supermodel.name %>.js'
-			},
-			supermodelLocally: {
-				src: 'src/bundle/<%= subpkg.supermodelLocally.name %>.js',
-				dest: 'tmp/<%= subpkg.supermodelLocally.name %>.js'
 			}
 		},
 		template: {
@@ -92,14 +68,6 @@ module.exports = function (grunt) {
 			baseLocally: {
 				src: '<%= preprocess.baseLocally.dest %>',
 				dest: '<%= preprocess.baseLocally.dest %>'
-			},
-			supermodel: {
-				src: '<%= preprocess.supermodel.dest %>',
-				dest: '<%= preprocess.supermodel.dest %>'
-			},
-			supermodelLocally: {
-				src: '<%= preprocess.supermodelLocally.dest %>',
-				dest: '<%= preprocess.supermodelLocally.dest %>'
 			}
 		},
 		concat: {
@@ -119,22 +87,6 @@ module.exports = function (grunt) {
 				src: '<%= preprocess.baseLocally.dest %>',
 				dest: 'lib/<%= subpkg.baseLocally.name %>/<%= subpkg.baseLocally.name %>.js'
 			},
-			supermodel: {
-        options: {
-          banner: '/*! <%= subpkg.supermodel.name %> <%= meta.banner %>',
-          stripBanners: true
-        },
-				src: '<%= preprocess.supermodel.dest %>',
-				dest: 'lib/<%= subpkg.supermodel.name %>/<%= subpkg.supermodel.name %>.js'
-			},
-			supermodelLocally: {
-        options: {
-          banner: '/*! <%= subpkg.supermodelLocally.name %> <%= meta.banner %>',
-          stripBanners: true
-        },
-				src: '<%= preprocess.supermodelLocally.dest %>',
-				dest: 'lib/<%= subpkg.supermodelLocally.name %>/<%= subpkg.supermodelLocally.name %>.js'
-			},
       baseTest: {
         files: {
           'test/base/test.js': [
@@ -147,27 +99,6 @@ module.exports = function (grunt) {
         files: {
           'test/baseLocally/test.js': [
             'test/baseLocally/tpl/header.js',
-            'test/baseLocally/tpl/test.js',
-            'test/base/tpl/test.js'
-          ]
-        }
-      },
-      supermodelTest: {
-        files: {
-          'test/supermodel/test.js': [
-            'test/supermodel/tpl/header.js',
-            'test/supermodel/tpl/test.js',
-            'test/baseLocally/tpl/test.js',
-            'test/base/tpl/test.js'
-          ]
-        }
-      },
-      supermodelLocallyTest: {
-        files: {
-          'test/supermodelLocally/test.js': [
-            'test/supermodelLocally/tpl/header.js',
-            'test/supermodelLocally/tpl/test.js',
-            'test/supermodel/tpl/test.js',
             'test/baseLocally/tpl/test.js',
             'test/base/tpl/test.js'
           ]
@@ -195,24 +126,12 @@ module.exports = function (grunt) {
 			baseLocally: {
 				src: '<%= concat.baseLocally.dest %>',
 				dest: 'lib/<%= subpkg.baseLocally.name %>/<%= subpkg.baseLocally.name %>.min.js'
-			},
-			supermodel: {
-				src: '<%= concat.supermodel.dest %>',
-				dest: 'lib/<%= subpkg.supermodel.name %>/<%= subpkg.supermodel.name %>.min.js'
-			},
-			supermodelLocally: {
-				src: '<%= concat.supermodelLocally.dest %>',
-				dest: 'lib/<%= subpkg.supermodelLocally.name %>/<%= subpkg.supermodelLocally.name %>.min.js'
 			}
 		},
 		unwrap: {
 			"backbone-jsonify": {
 				src:	'./node_modules/backbone-jsonify/lib/backbone.jsonify.js',
 				dest:	'./tmp/backbone-jsonify.bare.js'
-			},
-			"supermodel-jsonify": {
-				src:	'./node_modules/backbone-jsonify/lib/supermodel.jsonify.js',
-				dest:	'./tmp/supermodel-jsonify.bare.js'
 			}
 		}
 	});
@@ -242,7 +161,7 @@ module.exports = function (grunt) {
 		} // if
 	});
 
-	// Backbone.Syncer. Base library tasks.
+	// backbone-repository. Base library tasks.
 	var baseTasks = [
 		'unwrap:backbone-jsonify',
 		'clean:base',
@@ -256,7 +175,7 @@ module.exports = function (grunt) {
 
 	grunt.registerTask('base', baseTasks);
 
-	// Base + locally library tasks.
+	// Nase + Locally library tasks.
 	var baseLocallyTasks = [
 		'unwrap:backbone-jsonify',
 		'clean:baseLocally',
@@ -270,40 +189,11 @@ module.exports = function (grunt) {
 
 	grunt.registerTask('baseLocally', baseLocallyTasks);
 
-	// Supermodel.Syncer. Supermodel library tasks.
-	var supermodelTasks = [
-		'unwrap:supermodel-jsonify',
-		'clean:supermodel',
-		'preprocess:supermodel',
-		'template:supermodel',
-		'concat:supermodel',
-		'concat:supermodelTest',
-		'tape:supermodel',
-		'uglify:supermodel'
-	];
-
-	grunt.registerTask('supermodel', supermodelTasks);
-
-	// Supermodel + Locally library tasks.
-	var supermodelLocallyTasks = [
-		'unwrap:supermodel-jsonify',
-		'clean:supermodelLocally',
-		'preprocess:supermodelLocally',
-		'template:supermodelLocally',
-		'concat:supermodelLocally',
-		'concat:supermodelLocallyTest',
-		'tape:supermodelLocally',
-		'uglify:supermodelLocally'
-	];
-
-	grunt.registerTask('supermodelLocally', supermodelLocallyTasks);
-
-
 	// Default task.
 
 	grunt.registerTask('default', baseTasks.concat(baseLocallyTasks).concat(supermodelTasks).concat(supermodelLocallyTasks));
 
 	// Test task.
-	grunt.registerTask('test', ['concat:baseTest', 'concat:baseLocallyTest', 'concat:supermodelTest', 'concat:supermodelLocallyTest', 'tape']);
+	grunt.registerTask('test', ['concat:baseTest', 'concat:baseLocallyTest', 'tape']);
 
 };

@@ -1,6 +1,6 @@
 {
-  "name": "backbone.syncer",
-  "description": "Backbone helper that alters and add manager methods to Backbone Model and Collection. Provides a local cache to track models and supports LocalStorage.",
+  "name": "backbone-repository",
+  "description": "An extension of Backbone to track models, manage sync methods and help building online, offline and hybrid solutions. Supports LocalStorage via Locally plugin.",
   "version": "0.1.0",
   "author": {
     "name": "Nacho Codoñer",
@@ -9,13 +9,13 @@
   "repository": [
     {
       "type": "git",
-      "url": "https://github.com/Gywem/Backbone.Syncer"
+      "url": "https://github.com/Gywem/backbone-repository"
     }
   ],
   "licenses": [
     {
       "type": "MIT",
-      "url": "https://github.com/Gywem/Backbone.Syncer/blob/master/LICENSE"
+      "url": "https://github.com/Gywem/backbone-repository/blob/master/LICENSE"
     }
   ],
   "dependencies": {
