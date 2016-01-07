@@ -78,7 +78,7 @@ The extension implements a model caching strategy. By this, a model register in 
 var User = Backbone.Model.extend();
 
 // A static method that returns the collection of users
-User.register();
+var userRegister = User.register();
 ```
 Along with that, a factory method will manage such register and will instantiate or return a model ensuring that it is not instantiated twice according to its identifier attribute. Both model register and factory method will be accessed through a static method of the model. 
 
