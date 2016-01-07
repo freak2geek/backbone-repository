@@ -414,6 +414,7 @@ Alters set method to provide new options.
 Available parameters:
 * options.dirty {Boolean} [dirty=true] Whether to handle dirtied changes or not.
 * options.version {Boolean} [version=true] Whether to handle version changes or not.
+* options.localStorage {Boolean} [localStorage= true] Forces to save the model in LocalStorage. (requires Locally extension)
 
 #### isDestroyed `model.isDestroyed([options])`
 Returns `true` if this model has been destroyed remotely, `false` otherwise.
