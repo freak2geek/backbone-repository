@@ -10,7 +10,7 @@ The library mainly supports the following features:
 
 * **Model register**: A *Collection* (C) keeps models instantiated.
 * **Sync modes**: *Sync modes* (m) are sync functions to different data sources that are managed by a *Repository* (R).
-* **Sync state and operations**: A *Model* (M) keeps changes to sync and run sync operations against a sync mode.
+* **Sync state and operations**: A *Model* (M) keeps changes not synchronized and run sync operations using a sync mode.
 
 ## Versions
 * **backbone-repository** - core library.
@@ -241,7 +241,7 @@ user.isFetched(); // false, the version has changed.
 ```
 
 ### Sync operations
-Along with predefined sync operations you can perform from a model such as fetch, save and destroy, the extension implements two useful methods: pull, push and check.
+Along with predefined sync operations you can perform from a model such as fetch, save and destroy, the extension implements three useful methods: pull, push and check.
 
 By default, all sync operations use the server mode, but it may use another one just by passing the mode as parameter.
 
