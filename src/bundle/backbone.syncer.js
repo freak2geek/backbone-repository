@@ -18,7 +18,7 @@
 
 	// @include ../common.js
 
-	// @include ../../tmp/backbone.jsonify.bare.js
+	// @include ../../tmp/backbone-jsonify.bare.js
 
 	// @include ../backbone.syncer.js
 

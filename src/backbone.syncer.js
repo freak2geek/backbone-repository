@@ -730,7 +730,6 @@ var serverSync = function (method, model, options) {
       case "patch":
         var success = options.success;
 
-        // Server mode.
         options.success = function (response) {
           // Avoids set to dirty server attributes.
           options.dirty = false;
@@ -769,7 +768,6 @@ var serverSync = function (method, model, options) {
 
         options.remove = false;
 
-        // Server mode.
         options.success = function (resp) {
           // Avoids set to dirty server attributes.
           options.dirty = false;

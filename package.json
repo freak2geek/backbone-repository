@@ -25,7 +25,7 @@
     "faucet": "0.0.0",
     "najax": "",
     "locallyjs": "git://github.com/ozantunca/locally.git",
-    "backbone.jsonify": "git://github.com/Gywem/Backbone.Jsonify.git"
+    "backbone-jsonify": "git://github.com/Gywem/backbone-jsonify.git"
   },
   "devDependencies": {
     "grunt": "~0.4.1",

@@ -206,13 +206,13 @@ module.exports = function (grunt) {
 			}
 		},
 		unwrap: {
-			"backbone.jsonify": {
-				src:	'./node_modules/backbone.jsonify/lib/backbone.jsonify.js',
-				dest:	'./tmp/backbone.jsonify.bare.js'
+			"backbone-jsonify": {
+				src:	'./node_modules/backbone-jsonify/lib/backbone.jsonify.js',
+				dest:	'./tmp/backbone-jsonify.bare.js'
 			},
-			"supermodel.jsonify": {
-				src:	'./node_modules/backbone.jsonify/lib/supermodel.jsonify.js',
-				dest:	'./tmp/supermodel.jsonify.bare.js'
+			"supermodel-jsonify": {
+				src:	'./node_modules/backbone-jsonify/lib/supermodel.jsonify.js',
+				dest:	'./tmp/supermodel-jsonify.bare.js'
 			}
 		}
 	});
@@ -244,7 +244,7 @@ module.exports = function (grunt) {
 
 	// Backbone.Syncer. Base library tasks.
 	var baseTasks = [
-		'unwrap:backbone.jsonify',
+		'unwrap:backbone-jsonify',
 		'clean:base',
 		'preprocess:base',
 		'template:base',
@@ -258,7 +258,7 @@ module.exports = function (grunt) {
 
 	// Base + locally library tasks.
 	var baseLocallyTasks = [
-		'unwrap:backbone.jsonify',
+		'unwrap:backbone-jsonify',
 		'clean:baseLocally',
 		'preprocess:baseLocally',
 		'template:baseLocally',
@@ -272,7 +272,7 @@ module.exports = function (grunt) {
 
 	// Supermodel.Syncer. Supermodel library tasks.
 	var supermodelTasks = [
-		'unwrap:supermodel.jsonify',
+		'unwrap:supermodel-jsonify',
 		'clean:supermodel',
 		'preprocess:supermodel',
 		'template:supermodel',
@@ -286,7 +286,7 @@ module.exports = function (grunt) {
 
 	// Supermodel + Locally library tasks.
 	var supermodelLocallyTasks = [
-		'unwrap:supermodel.jsonify',
+		'unwrap:supermodel-jsonify',
 		'clean:supermodelLocally',
 		'preprocess:supermodelLocally',
 		'template:supermodelLocally',
