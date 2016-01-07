@@ -33,6 +33,7 @@ The library mainly supports the following features:
 	- [Sync operations](#sync-operations)
 		- [Pull method](#pull-method)
 		- [Push method](#push-method)
+		- [Check method](#check-method)
 - [Reference API](#reference-api)
 	- [Backbone.Repository](#backbonerepository)
   		- [modes](#modes-backbonerepositorymodes)
