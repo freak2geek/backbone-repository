@@ -44,15 +44,17 @@ Backbone.Model = Backbone.Model.extend({
   initialize: function () {
     var self = this;
 
-    this._fetched = {};
     this.dirtied = {};
+    this._destroyed = {};
+    this._fetched = {};
 
     _.each(Backbone.Repository.modes(), function (mode) {
       this.dirtied[mode] = {};
+      this._destroyed[mode] = false;
+      this._fetched[mode] = false;
     }.bind(this));
 
     this._dirtyDestroyed = false;
-    this._destroyed = {};
 
     // Saving dirty attributes
     _.each(Backbone.Repository.modes(), function (mode) {

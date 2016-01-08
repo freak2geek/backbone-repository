@@ -144,7 +144,7 @@ _.extend(ModelStorage.prototype, {
   key: function (options)  {
     options || (options = {});
 
-    var storagePrefix = Backbone.Repository.storagePrefix;
+    var storagePrefix = (Repository.storagePrefix && Repository.storagePrefix+":") || "";
     var storeName =
       options.storeName || // by option param
       _.result(this.model, 'storeName') || // by model instance property
@@ -159,7 +159,7 @@ _.extend(ModelStorage.prototype, {
       // otherwise, an internal identifier is generated.
       this.sid();
 
-    return storagePrefix+":"+
+    return storagePrefix+
       storeName+":"+
       idModel;
   },
@@ -187,12 +187,12 @@ _.extend(ModelStorage.prototype, {
     serialized[serialKey.attributes] = this.model.toJSON(_.extend({}, options, {
       cid: false
     }));
-    serialized[serialKey.dirtiedAttributes] = _.omit(this.model.dirtied, "cid");
+    serialized[serialKey.dirtiedAttributes] = _.values(_.omit(this.model.dirtied, "cid"));
     serialized[serialKey.dirtyDestroyed] = this.model._dirtyDestroyed;
     serialized[serialKey.changes] = _.omit(this.model.changed, "cid");
     serialized[serialKey.previousAttributes] = _.omit(this.model._previousAttributes, "cid");
-    serialized[serialKey.fetched] = this.model._fetched;
-    serialized[serialKey.destroyed] = this.model._destroyed;
+    serialized[serialKey.fetched] = _.values(this.model._fetched);
+    serialized[serialKey.destroyed] = _.values(this.model._destroyed);
 
     var sid = this.model.sid;
     if (sid) {
@@ -215,12 +215,14 @@ _.extend(ModelStorage.prototype, {
 
     this.model.set(attrs, _.extend({}, options, {localStorage: false}));
 
-    this.model.dirtied = serialized[serialKey.dirtiedAttributes];
+    var modes = Backbone.Repository.modes();
+
+    this.model.dirtied = _.object(modes, serialized[serialKey.dirtiedAttributes]);
     this.model._dirtyDestroyed = serialized[serialKey.dirtyDestroyed];
     this.model.changed = serialized[serialKey.changes];
     this.model._previousAttributes = serialized[serialKey.previousAttributes];
-    this.model._fetched = serialized[serialKey.fetched];
-    this.model._destroyed = serialized[serialKey.destroyed];
+    this.model._fetched = _.object(modes, serialized[serialKey.fetched]);
+    this.model._destroyed = _.object(modes, serialized[serialKey.destroyed]);
   }
 });
 
@@ -301,13 +303,13 @@ _.extend(CollectionStorage.prototype, {
   key: function (options)  {
     options || (options = {});
 
-    var storagePrefix = Backbone.Repository.storagePrefix;
+    var storagePrefix = (Repository.storagePrefix && Repository.storagePrefix+":") || "";
     var storeName =
       options.storeName ||
       _.result(this.collection, 'storeName') ||
       storeNameError();
 
-    return storagePrefix+":"+storeName;
+    return storagePrefix+storeName;
   },
 
   /**
