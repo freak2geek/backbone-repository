@@ -2,10 +2,7 @@
   "name": "backbone-repository",
   "description": "An extension of Backbone to track models, manage sync methods and help building online, offline and hybrid solutions. Supports LocalStorage via Locally plugin.",
   "version": "1.0.0",
-  "author": {
-    "name": "Nacho Codoñer",
-    "email": "igcogi@gmail.com"
-  },
+  "author": "Nacho Codoñer <igcogi@gmail.com>",
   "repository": [
     {
       "type": "git",
@@ -40,11 +37,15 @@
     "unwrap": "0.1.0"
   },
   "directories": {
-    "lib": "./lib",
-    "doc": "./doc"
+    "test": "test"
   },
   "engines": {
     "node": ">=0.8"
   },
-  "keywords": []
+  "keywords": [],
+  "main": "Gruntfile.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "license": "ISC"
 }

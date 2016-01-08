@@ -1,4 +1,4 @@
 # CHANGELOG
 
 ### v1.0.0
-- Releases library.
+- Releases the library.
