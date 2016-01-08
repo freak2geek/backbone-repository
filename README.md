@@ -304,7 +304,7 @@ user.push({
 ```
 
 #### Check method
-The check method is devised to fetch only a model version attribute and check the model is up to date. This has the sense to be used with remote sync modes. The server mode is configured to accept the `checkUrl`, which represent the checking endpoint.
+The check method is devised to fetch only the model version attribute and check is up to date. This has the sense to be used with remote sync modes. The server mode is configured to accept the `checkUrl`, which represent the checking endpoint.
 
 ```javascript
 var User = Backbone.Model.extend({
