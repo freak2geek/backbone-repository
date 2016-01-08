@@ -1,7 +1,7 @@
 {
   "name": "backbone-repository",
   "description": "An extension of Backbone to track models, manage sync methods and help building online, offline and hybrid solutions. Supports LocalStorage via Locally plugin.",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "author": {
     "name": "Nacho Codoñer",
     "email": "igcogi@gmail.com"

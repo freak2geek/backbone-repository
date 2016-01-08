@@ -15,7 +15,7 @@ module.exports = function (grunt) {
 				name: "backbone-repository"
 			},
 			baseLocally: {
-				title: "backbone-repository-Locally",
+				title: "backbone-repository-locally",
 				name: "backbone-repository-locally"
 			}
 		},
