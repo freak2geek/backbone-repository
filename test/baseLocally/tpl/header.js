@@ -6,11 +6,12 @@ Backbone.ajax = najax;
 
 require('../../tmp/backbone-repository-locally');
 
-Backbone.Syncer.storagePrefix = "Test";
+Backbone.Repository.storagePrefix = "Test";
 
 var User = Backbone.Model.extend({
   url: "http://www.example.com/user",
-  versionAttribute: "version"
+  versionAttribute: "version",
+  checkUrl: "http://www.example.com/user/check"
 }, {
   storeName: "User"
 });
@@ -23,6 +24,7 @@ var Admin = Backbone.Model.extend({
 
 var Users = Backbone.Collection.extend({
   url: "http://www.example.com/users",
+  checkUrl: "http://www.example.com/users/check",
   storeName: "Users",
   model: function (attrs, options) {
     return User.create(attrs, options);

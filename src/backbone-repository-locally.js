@@ -187,12 +187,12 @@ _.extend(ModelStorage.prototype, {
     serialized[serialKey.attributes] = this.model.toJSON(_.extend({}, options, {
       cid: false
     }));
-    serialized[serialKey.dirtiedAttributes] = _.omit(this.model.dirtiedAttributes(), "cid");
-    serialized[serialKey.dirtyDestroyed] = this.model.isDirtyDestroyed();
-    serialized[serialKey.changes] = _.omit(this.model.changedAttributes(), "cid");
-    serialized[serialKey.previousAttributes] = _.omit(this.model.previousAttributes(), "cid");
-    serialized[serialKey.fetched] = this.model.isFetched();
-    serialized[serialKey.destroyed] = this.model.isDestroyed();
+    serialized[serialKey.dirtiedAttributes] = _.omit(this.model.dirtied, "cid");
+    serialized[serialKey.dirtyDestroyed] = this.model._dirtyDestroyed;
+    serialized[serialKey.changes] = _.omit(this.model.changed, "cid");
+    serialized[serialKey.previousAttributes] = _.omit(this.model._previousAttributes, "cid");
+    serialized[serialKey.fetched] = this.model._fetched;
+    serialized[serialKey.destroyed] = this.model._destroyed;
 
     var sid = this.model.sid;
     if (sid) {

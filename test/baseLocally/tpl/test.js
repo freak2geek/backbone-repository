@@ -5,7 +5,7 @@ var test = function(name, options, callback) {
   }
   require('tape')(name, options, function(t) {
     // Clear storage.
-    Backbone.Syncer.storage().clear();
+    Backbone.Repository.storage().clear();
     // Clear local cache.
     User.reset();
     Admin.reset();
@@ -27,12 +27,12 @@ test('Stores a model to Storage.', function (t) {
     mode: "localStorage"
   });
 
-  serialized = Backbone.Syncer.storage().get(user.storage().key());
+  serialized = Backbone.Repository.storage().get(user.storage().key());
 
   t.same(serialized, user.storage().serialize(),
     "Model has been sucessfully saved in storage by a storage method.");
 
-  Backbone.Syncer.storage().clear();
+  Backbone.Repository.storage().clear();
 
   // Using manager method.
   user.save({}, {
@@ -40,7 +40,7 @@ test('Stores a model to Storage.', function (t) {
     localStorage: true
   });
 
-  var serialized = Backbone.Syncer.storage().get(user.storage().key());
+  var serialized = Backbone.Repository.storage().get(user.storage().key());
 
   t.same(serialized, user.storage().serialize(),
     "Model has been sucessfully saved in storage by a model manager method.");
@@ -64,7 +64,7 @@ test('Removes a model from Storage.', function (t) {
     mode: "localStorage"
   });
 
-  var serialized = Backbone.Syncer.storage().get(user.storage().key());
+  var serialized = Backbone.Repository.storage().get(user.storage().key());
 
   t.ok(!serialized,
     "Model has been sucessfully remove from storage by a storage method.");
@@ -79,7 +79,7 @@ test('Removes a model from Storage.', function (t) {
     localStorage: true
   });
 
-  var serialized = Backbone.Syncer.storage().get(user.storage().key());
+  var serialized = Backbone.Repository.storage().get(user.storage().key());
 
   t.ok(!serialized,
     "Model has been sucessfully remove from storage by a manager method.");
