@@ -1,6 +1,6 @@
-/* Backbone.Syncer.Locally */
+/* Backbone.Repository.Locally */
 
-_.extend(Backbone.Syncer, {
+_.extend(Backbone.Repository, {
   /**
    * @property {String} [storagePrefix]
    * The prefix for using in all storages.
@@ -32,7 +32,7 @@ _.extend(Backbone.Syncer, {
   }
 });
 
-var serialKey = Backbone.Syncer.serialKey;
+var serialKey = Backbone.Repository.serialKey;
 
 /**
  * Singleton variable for Locally's Store object.
@@ -44,7 +44,7 @@ var storage;
  */
 var Storage = function () {
   if(!storage) {
-    storage = new Locally.Store({ compress: Backbone.Syncer.compressStorage });
+    storage = new Locally.Store({ compress: Backbone.Repository.compressStorage });
   }
   return storage;
 };
@@ -144,7 +144,7 @@ _.extend(ModelStorage.prototype, {
   key: function (options)  {
     options || (options = {});
 
-    var storagePrefix = Backbone.Syncer.storagePrefix;
+    var storagePrefix = Backbone.Repository.storagePrefix;
     var storeName =
       options.storeName || // by option param
       _.result(this.model, 'storeName') || // by model instance property
@@ -301,7 +301,7 @@ _.extend(CollectionStorage.prototype, {
   key: function (options)  {
     options || (options = {});
 
-    var storagePrefix = Backbone.Syncer.storagePrefix;
+    var storagePrefix = Backbone.Repository.storagePrefix;
     var storeName =
       options.storeName ||
       _.result(this.collection, 'storeName') ||
@@ -523,12 +523,12 @@ _.extend(Backbone.Model.prototype, {
 
 });
 
-var previousSetCollectionSyncer = Backbone.Collection.prototype.set;
+var previousSetCollectionRepository = Backbone.Collection.prototype.set;
 
-var prevFetchCollectionSyncer = Backbone.Collection.prototype.fetch;
-var prevSaveCollectionSyncer = Backbone.Collection.prototype.save;
-var prevDestroyCollectionSyncer = Backbone.Collection.prototype.destroy;
-var prevPullCollectionSyncer = Backbone.Collection.prototype.pull;
+var prevFetchCollectionRepository = Backbone.Collection.prototype.fetch;
+var prevSaveCollectionRepository = Backbone.Collection.prototype.save;
+var prevDestroyCollectionRepository = Backbone.Collection.prototype.destroy;
+var prevPullCollectionRepository = Backbone.Collection.prototype.pull;
 
 /**
  * Extends Backbone.Collection to enable Locally.
@@ -552,7 +552,7 @@ _.extend(Backbone.Collection.prototype, {
    * Alters `set` to enable `localStorage` option.
    */
   set: function(models, options) {
-    var output = previousSetCollectionSyncer.call(this, models, options);
+    var output = previousSetCollectionRepository.call(this, models, options);
 
     if (options && options.localStorage) {
       this.storage().store(options.localStorage);
@@ -569,7 +569,7 @@ _.extend(Backbone.Collection.prototype, {
       this.storage().load(options.localStorage);
     }
 
-    return prevFetchCollectionSyncer.call(this, options);
+    return prevFetchCollectionRepository.call(this, options);
   },
 
   /**
@@ -580,7 +580,7 @@ _.extend(Backbone.Collection.prototype, {
       this.storage().store(options.localStorage);
     }
 
-    return prevSaveCollectionSyncer.call(this, options);
+    return prevSaveCollectionRepository.call(this, options);
   },
 
   /**
@@ -591,7 +591,7 @@ _.extend(Backbone.Collection.prototype, {
       this.storage().remove(options.localStorage);
     }
 
-    return prevDestroyCollectionSyncer.call(this, options);
+    return prevDestroyCollectionRepository.call(this, options);
   },
 
   /**
@@ -602,7 +602,7 @@ _.extend(Backbone.Collection.prototype, {
       this.storage().load(options.localStorage);
     }
 
-    return prevPullCollectionSyncer.call(this, options);
+    return prevPullCollectionRepository.call(this, options);
   }
 
 });
@@ -662,4 +662,4 @@ var localstorageSync = function (method, model, options) {
 }
 
 // Registers localstorage mode from the library.
-Syncer.register("localStorage", localstorageSync);
+Repository.register("localStorage", localstorageSync);

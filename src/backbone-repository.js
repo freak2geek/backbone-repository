@@ -1,4 +1,4 @@
-/* Backbone.Syncer */
+/* Backbone.Repository */
 
 var Model = Backbone.Model;
 
@@ -47,7 +47,7 @@ Backbone.Model = Backbone.Model.extend({
     this._fetched = {};
     this.dirtied = {};
 
-    _.each(Backbone.Syncer.modes(), function (mode) {
+    _.each(Backbone.Repository.modes(), function (mode) {
       this.dirtied[mode] = {};
     }.bind(this));
 
@@ -55,7 +55,7 @@ Backbone.Model = Backbone.Model.extend({
     this._destroyed = {};
 
     // Saving dirty attributes
-    _.each(Backbone.Syncer.modes(), function (mode) {
+    _.each(Backbone.Repository.modes(), function (mode) {
       this.dirtied[mode] || (this.dirtied[mode] = {});
       _.extend(this.dirtied[mode], _.omit(this.attributes, [this.idAttribute, this.cidAttribute]));
     }.bind(this));
@@ -88,7 +88,7 @@ Backbone.Model = Backbone.Model.extend({
    */
   isFetched: function (options) {
     options || (options = {});
-    _.defaults(options, {mode: Syncer.defaultMode()});
+    _.defaults(options, {mode: Repository.defaultMode()});
     return this._fetched[options.mode] || false;
   },
 
@@ -104,7 +104,7 @@ Backbone.Model = Backbone.Model.extend({
    */
   dirtiedAttributes: function(options) {
     options || (options = {});
-    _.defaults(options, {mode: Syncer.defaultMode()});
+    _.defaults(options, {mode: Repository.defaultMode()});
 
     return _.clone(this.dirtied[options.mode]) || {};
   },
@@ -116,7 +116,7 @@ Backbone.Model = Backbone.Model.extend({
    */
   hasDirtied: function (attr, options) {
     options || (options = {});
-    _.defaults(options, {mode: Syncer.defaultMode()});
+    _.defaults(options, {mode: Repository.defaultMode()});
 
     if (attr == null) return !_.isEmpty(this.dirtied[options.mode]);
     return _.has(this.dirtied[options.mode], attr);
@@ -163,31 +163,25 @@ Backbone.Model = Backbone.Model.extend({
       options.dirty = true; // Default dirty option.
     }
 
+    var previousVersion;
+    if(options.version) {
+      previousVersion = this.attributes[this.versionAttribute];
+    }
+
     var output = previousSet.call(this, attrs, options);
 
     if(options.dirty) {
-      _.each(Backbone.Syncer.modes(), function (mode) {
+      _.each(Backbone.Repository.modes(), function (mode) {
         this.dirtied[mode] || (this.dirtied[mode] = {});
         _.extend(this.dirtied[mode], _.omit(attrs, [this.idAttribute, this.cidAttribute]));
       }.bind(this));
     }
 
     // Versioning handler.
-    if(options && options.version &&
+    if(options.version &&
       this.versionAttribute && attrs[this.versionAttribute]) {
-
-      var previousVersion = this._previousAttributes[this.versionAttribute];
       var newVersion = attrs[this.versionAttribute];
-      if (isLaterVersion(newVersion, previousVersion)) {
-        var mode = options.mode;
-
-        if(mode) {
-          this._fetched[mode] = false;
-        }
-
-        // triggers outdated event
-        this.trigger("outdated", this, newVersion, options);
-      }
+      checkVersion(this, options, newVersion, previousVersion);
     }
 
     return output;
@@ -205,7 +199,7 @@ Backbone.Model = Backbone.Model.extend({
    */
   isDestroyed: function (options) {
     options || (options = {});
-    _.defaults(options, {mode: Syncer.defaultMode()});
+    _.defaults(options, {mode: Repository.defaultMode()});
     return this._destroyed[options.mode] || false;
   },
 
@@ -214,13 +208,13 @@ Backbone.Model = Backbone.Model.extend({
    */
   fetch: function(options) {
     options || (options = {});
-    _.defaults(options, {mode: Syncer.defaultMode()});
+    _.defaults(options, {mode: Repository.defaultMode()});
     return previousFetch.apply(this, [options]);
   },
 
   /**
    * Alters save method to include changes being set as an option
-   * for the Syncer method.
+   * for the Repository method.
    */
   save: function(key, val, options) {
     var attrs;
@@ -232,7 +226,7 @@ Backbone.Model = Backbone.Model.extend({
     }
 
     options || (options = {});
-    _.defaults(options, {mode: Syncer.defaultMode()});
+    _.defaults(options, {mode: Repository.defaultMode()});
 
     if(options.patch) {
       options.changes = attrs;
@@ -248,7 +242,7 @@ Backbone.Model = Backbone.Model.extend({
    */
   destroy: function(options) {
     options || (options = {});
-    _.defaults(options, {mode: Syncer.defaultMode()});
+    _.defaults(options, {mode: Repository.defaultMode()});
 
     var model = this;
     var success = options.success;
@@ -295,7 +289,7 @@ Backbone.Model = Backbone.Model.extend({
    */
   pull: function(options) {
     options || (options = {});
-    _.defaults(options, {mode: Syncer.defaultMode()});
+    _.defaults(options, {mode: Repository.defaultMode()});
 
     var mode = options.mode;
     if (this.isFetched(options)) {
@@ -327,6 +321,32 @@ Backbone.Model = Backbone.Model.extend({
       // Model has dirtied changes, it will be updated remotelly.
       return this.save(this.dirtiedAttributes(options), options);
     }
+  },
+
+  /**
+   * @property {String} [checkUrl=""] The checking endpoint for the Model.
+   */
+  checkUrl: '',
+
+  /**
+   * Check method
+   *
+   * @param {Object} [options]
+   * @return {Object} xhr
+   */
+  check: function(options) {
+    options || (options = {});
+    _.defaults(options, {mode: Repository.defaultMode()});
+
+    var url = options.checkUrl || _.result(this, 'checkUrl');
+    if (!url) {
+      throw new Error('The "checkUrl" must be specified.');
+    }
+
+    return this.fetch(_.extend(options, {
+      url: url,
+      version: true
+    }));
   },
 
   /**
@@ -468,7 +488,7 @@ Backbone.Collection = Backbone.Collection.extend({
    */
   fetch: function(options) {
     options = _.extend({parse: true}, options);
-    _.defaults(options, {mode: Syncer.defaultMode()});
+    _.defaults(options, {mode: Repository.defaultMode()});
 
     return prevFetchCollection.apply(this, [options]);
   },
@@ -481,7 +501,7 @@ Backbone.Collection = Backbone.Collection.extend({
    */
   save: function(options) {
     options || (options = {});
-    _.defaults(options, {mode: Syncer.defaultMode()});
+    _.defaults(options, {mode: Repository.defaultMode()});
 
     var success = options.success;
     options.originalSuccess = options.success;
@@ -505,7 +525,7 @@ Backbone.Collection = Backbone.Collection.extend({
    */
   destroy: function(options) {
     options || (options = {});
-    _.defaults(options, {mode: Syncer.defaultMode()});
+    _.defaults(options, {mode: Repository.defaultMode()});
 
     var success = options.success;
     options.originalSuccess = options.success;
@@ -527,7 +547,7 @@ Backbone.Collection = Backbone.Collection.extend({
    */
   pull: function(options) {
     options || (options = {});
-    _.defaults(options, {mode: Syncer.defaultMode()});
+    _.defaults(options, {mode: Repository.defaultMode()});
 
     var success = options.success;
 
@@ -562,12 +582,39 @@ Backbone.Collection = Backbone.Collection.extend({
     _.each(models, function (model) {
         model.push(options);
     });
+  },
+
+
+  /**
+   * @property {String} [checkUrl=""] The checking endpoint for Collection.
+   */
+  checkUrl: '',
+
+  /**
+   * Check method
+   *
+   * @param {Object} [options]
+   * @return {Object} xhr
+   */
+  check: function(options) {
+    options || (options = {});
+    _.defaults(options, {mode: Repository.defaultMode()});
+
+    var url = options.checkUrl || _.result(this, 'checkUrl');
+    if (!url) {
+      throw new Error('The "checkUrl" must be specified.');
+    }
+
+    return this.fetch(_.extend(options, {
+      url: url,
+      version: true
+    }));
   }
 
 });
 
 /**
- * Syncer's logic for sync methods.
+ * Repository's logic for sync methods.
  */
 var sync = function (method, model, options) {
   options || (options = {});
@@ -580,7 +627,7 @@ var sync = function (method, model, options) {
   wrapSuccess(method, model, options);
 
   if (mode) {
-    var syncFn = Syncer.mode(mode);
+    var syncFn = Repository.mode(mode);
 
     if (syncFn) {
       return syncFn.apply(options.context, [method, model, options]);
@@ -588,7 +635,7 @@ var sync = function (method, model, options) {
       throw new Error('The "mode" passed must be implemented.');
     }
   } else {
-    return Syncer.backboneSync.apply(options.context, [method, model, options]);
+    return Repository.backboneSync.apply(options.context, [method, model, options]);
   }
 
 }
@@ -640,7 +687,10 @@ var wrapSuccess = function (method, model, options) {
         var success = options.success;
 
         options.success = function (resp) {
-          model._fetched[mode] = true;
+          // Mark model as fetched.
+          if(!options.version) {
+            model._fetched[mode] = true;
+          }
 
           if(success) success.call(options.context, resp);
         };
@@ -649,7 +699,7 @@ var wrapSuccess = function (method, model, options) {
 
     }
 
-  } /*else if(model instanceof Backbone.Collection) {
+  } else if(model instanceof Backbone.Collection) {
 
     var collection = model;
 
@@ -657,34 +707,26 @@ var wrapSuccess = function (method, model, options) {
       case "read":
         var success = options.success;
 
-        options.remove = false;
-
-        // Server mode.
         options.success = function (resp) {
-          // Avoids set to dirty server attributes.
-          options.dirty = false;
+          _.each(collection.models, function (model) {
+            var searchBy = {};
+            searchBy[model.idAttribute] = model.id;
 
-          // Prepares the collection according to the passed option.
-          var method = options.reset ? 'reset' : 'set';
-          collection[method](resp, options);
+            var respModel = _.findWhere(resp, searchBy);
 
-          // Marks responsed models as fetched.
-          var models = resp;
-          _.each(models, function (value) {
-            var model = collection.get(value);
-            model._fetched = true;
+            // Mark model as fetched.
+            if(!options.version) {
+              model._fetched[mode] = true;
+            }
           });
-
-          // Marks the collection as fetched.
-          collection.fetched = true;
 
           if(success) success.call(options.context, resp);
         };
 
-        return Syncer.backboneSync.apply(this, [method, collection, options]);
+        break;
 
     }
-  }*/
+  }
 }
 
 /**
@@ -737,7 +779,7 @@ var serverSync = function (method, model, options) {
           if(success) success.call(options.context, response);
         };
 
-        return Syncer.backboneSync.apply(this, [method, model, options]);
+        return Repository.backboneSync.apply(this, [method, model, options]);
 
       case "delete":
         // Performs nothing in case the model is new.
@@ -748,13 +790,13 @@ var serverSync = function (method, model, options) {
 
         model.constructor.register().remove(model);
 
-        return Syncer.backboneSync.apply(this, [method, model, options]);
+        return Repository.backboneSync.apply(this, [method, model, options]);
 
       case "read":
         // Avoids set to dirty server attributes.
         options.dirty = false;
 
-        return Syncer.backboneSync.apply(this, [method, model, options]);
+        return Repository.backboneSync.apply(this, [method, model, options]);
 
     }
 
@@ -776,20 +818,10 @@ var serverSync = function (method, model, options) {
           var method = options.reset ? 'reset' : 'set';
           collection[method](resp, options);
 
-          // Marks responsed models as fetched.
-          var models = resp;
-          _.each(models, function (value) {
-            var model = collection.get(value);
-            model._fetched[mode] = true;
-          });
-
-          // Marks the collection as fetched.
-          collection.fetched = true;
-
           if(success) success.call(options.context, resp);
         };
 
-        return Syncer.backboneSync.apply(this, [method, collection, options]);
+        return Repository.backboneSync.apply(this, [method, collection, options]);
 
       case "create":
       case "update":
@@ -821,13 +853,29 @@ var syncMode = {
 };
 
 // Registers syncModes from the library.
-Syncer.register(syncMode);
+Repository.register(syncMode);
 
 // Establish default mode.
-Syncer.defaultMode("server");
+Repository.defaultMode("server");
 
-// Replaces the previous Backbone.sync method by the Syncer's one.
+// Replaces the previous Backbone.sync method by the Repository's one.
 Backbone.sync = sync;
+
+/**
+ * @return {Boolean} Change fetch status whether 'newVersion' is more actual than
+ * 'currentVersion'.
+ */
+function checkVersion (model, options, newVersion, currentVersion) {
+  if (isLaterVersion(newVersion, currentVersion)) {
+    var mode = options.mode;
+    if(mode) {
+      model._fetched[mode] = false;
+    }
+
+    // triggers outdated event
+    model.trigger("outdated", model, newVersion, options);
+  }
+}
 
 /**
  * @return {Boolean} Checks whether 'newVersion' is more actual than

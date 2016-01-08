@@ -8,7 +8,8 @@ require('../../tmp/backbone-repository');
 
 var User = Backbone.Model.extend({
   url: "http://www.example.com/user",
-  versionAttribute: "version"
+  versionAttribute: "version",
+  checkUrl: "http://www.example.com/user/check"
 });
 
 var Admin = Backbone.Model.extend({
@@ -16,7 +17,8 @@ var Admin = Backbone.Model.extend({
 });
 
 var Users = Backbone.Collection.extend({
-  url: "http://www.example.com/users"
+  url: "http://www.example.com/users",
+  checkUrl: "http://www.example.com/users/check"
 });
 
 var test = function(name, options, callback) {
@@ -32,17 +34,17 @@ var test = function(name, options, callback) {
 };
 
 test('Return existing model if present', function (t) {
-	var a = User.create({id: 1});
-	var b = User.create({id: 1});
-	t.ok(a === b);
-	t.end();
+  var a = User.create({id: 1});
+  var b = User.create({id: 1});
+  t.ok(a === b);
+  t.end();
 });
 
 test('Set values on existing models', function (t) {
-	var user = User.create({id: 1});
-	User.create({id: 1, test: 'test'});
-	t.is(user.get('test'), 'test');
-	t.end();
+  var user = User.create({id: 1});
+  User.create({id: 1, test: 'test'});
+  t.is(user.get('test'), 'test');
+  t.end();
 });
 
 test('Passing attributes returns model', function (t) {
@@ -67,74 +69,74 @@ test('Add model to all during initialize', function (t) {
 });
 
 test('Use cid to identify attributes.', function (t) {
-	var Model = Backbone.Model.extend();
-	var model = Model.create();
-	t.same(model.toJSON(), {cid: model.cid});
-	t.is(model.get('cid'), model.cid);
-	t.ok(Model.create(model.attributes) === model);
-	t.ok(Model.create({cid: model.cid}) === model);
-	t.end();
+  var Model = Backbone.Model.extend();
+  var model = Model.create();
+  t.same(model.toJSON(), {cid: model.cid});
+  t.is(model.get('cid'), model.cid);
+  t.ok(Model.create(model.attributes) === model);
+  t.ok(Model.create({cid: model.cid}) === model);
+  t.end();
 });
 
 test('Use cidAttribute to identify attributes.', function (t) {
-	var Model = Backbone.Model.extend({cidAttribute: '_cid'});
-	var model = Model.create();
-	t.is(model.get('_cid'), model.cid);
-	t.same(model.toJSON(), {_cid: model.cid});
-	t.ok(Model.create(model.attributes) === model);
-	t.ok(Model.create({_cid: model.cid}) === model);
-	t.end();
+  var Model = Backbone.Model.extend({cidAttribute: '_cid'});
+  var model = Model.create();
+  t.is(model.get('_cid'), model.cid);
+  t.same(model.toJSON(), {_cid: model.cid});
+  t.ok(Model.create(model.attributes) === model);
+  t.ok(Model.create({_cid: model.cid}) === model);
+  t.end();
 });
 
 test('Respect idAttribute.', function (t) {
-	var Model = Backbone.Model.extend({idAttribute: '_id'});
-	var model = Model.create({_id: 1});
-	t.ok(Model.create({_id: 1}) === model);
-	t.end();
+  var Model = Backbone.Model.extend({idAttribute: '_id'});
+  var model = Model.create({_id: 1});
+  t.ok(Model.create({_id: 1}) === model);
+  t.end();
 });
 
 test('Overrides and execute an initialize method properly.', function (t) {
-	t.plan(4);
-	var Model = Backbone.Model.extend({
-		initialize: function (attrs, options) {
+  t.plan(4);
+  var Model = Backbone.Model.extend({
+    initialize: function (attrs, options) {
       this.attrs = attrs;
-			this.options = options;
-			t.pass();
-		}
-	});
+      this.options = options;
+      t.pass();
+    }
+  });
 
   var attrs = {};
-	var options = {
-		o1: 1
-	};
-	var model = Model.create(attrs, options);
+  var options = {
+    o1: 1
+  };
+  var model = Model.create(attrs, options);
 
-	// Supermodel's initialize method has been executed firstly
-	t.ok(model.get(model.cidAttribute) == model.cid);
+  // Supermodel's initialize method has been executed firstly
+  t.ok(model.get(model.cidAttribute) == model.cid);
 
   // Attrs has been passed as parameters through the overrided initialized method
   t.ok(model.attrs === attrs);
 
-	// Options has been passed as parameters through the overrided initialized method
-	t.ok(model.options === options);
+  // Options has been passed as parameters through the overrided initialized method
+  t.ok(model.options === options);
 });
 
 test('Fetch method on Model. Client mode.', function (t) {
-	t.plan(2);
+  t.plan(2);
 
-	var user = User.create({
-		id: 1
-	});
+  var user = User.create({
+    id: 1
+  });
 
-	t.ok(!user.isFetched(),
-		"User is not fetched yet.");
+  t.ok(!user.isFetched(),
+    "User is not fetched yet.");
 
-	user.fetch({
+  user.fetch({
     mode: "client",
     success: function (model, response, options) {
       t.pass();
     }
-	});
+  });
 
 });
 
@@ -162,20 +164,20 @@ test('Fetch method on Model. Server mode.', function (t) {
 });
 
 test('Save method on Model. Client mode.', function (t) {
-	t.plan(1);
+  t.plan(1);
 
-	var user = User.create({
-		id: 1
-	});
+  var user = User.create({
+    id: 1
+  });
 
-	user.save({
-		name: "Nacho"
-	}, {
-		mode: "client",
-		success: function(model, response, options) {
-			t.same(model.get('name'), "Nacho", "Local save.");
-		}
-	});
+  user.save({
+    name: "Nacho"
+  }, {
+    mode: "client",
+    success: function(model, response, options) {
+      t.same(model.get('name'), "Nacho", "Local save.");
+    }
+  });
 
 });
 
@@ -454,14 +456,14 @@ test('Triggers outdated event on version change.', function (t) {
 });
 
 test('Destroy method on Model. Client mode.', function (t) {
-	t.plan(1);
+  t.plan(1);
 
-	var user = User.create({
-		id: 1
-	});
+  var user = User.create({
+    id: 1
+  });
 
-	user.destroy({
-		mode: "client",
+  user.destroy({
+    mode: "client",
     success: function (model, response, options) {
       t.ok(model.isDirtyDestroyed(),
         "User is destroyed locally.");
@@ -469,7 +471,7 @@ test('Destroy method on Model. Client mode.', function (t) {
     error: function (model, response, options) {
       options.success();
     }
-	});
+  });
 
 });
 
@@ -494,34 +496,34 @@ test('Destroy method on Model. Server mode.', function (t) {
 });
 
 test('Destroyed flag is set and the model is remained in local cache. Client mode.', function (t) {
-	t.plan(3);
+  t.plan(3);
 
-	var user = User.create({
-		id: 1
-	});
+  var user = User.create({
+    id: 1
+  });
 
-	t.ok(!user.isDestroyed(), "User is not destroyed yet.");
+  t.ok(!user.isDestroyed(), "User is not destroyed yet.");
 
-	user.destroy({
-		mode: "client",
-		success: function (model, response, options) {
-			t.ok(user.isDirtyDestroyed(),
-				"User has been marked as dirty to be destroyed.");
-			t.ok(User.find(model),
-				"User is still in the local cache.");
-		}
-	});
+  user.destroy({
+    mode: "client",
+    success: function (model, response, options) {
+      t.ok(user.isDirtyDestroyed(),
+        "User has been marked as dirty to be destroyed.");
+      t.ok(User.find(model),
+        "User is still in the local cache.");
+    }
+  });
 
 });
 
 test('A destroyed model is earsed from local cache on server successful response. Server mode.', function (t) {
-	t.plan(2);
+  t.plan(2);
 
-	var user = User.create({
-		id: 1
-	});
+  var user = User.create({
+    id: 1
+  });
 
-	user.destroy({
+  user.destroy({
     success: function (model, response, options) {
       t.ok(user.isDestroyed(),
         "User has been destroyed.");
@@ -529,21 +531,21 @@ test('A destroyed model is earsed from local cache on server successful response
       t.ok(!User.find(model),
         "User is no longer in the local cache.");
     },
-		error: function (model, response, options) {
-			options.success();
-		}
-	});
+    error: function (model, response, options) {
+      options.success();
+    }
+  });
 
 });
 
 test('Pull method on Model.', function (t) {
-	t.plan(2);
+  t.plan(2);
 
-	var user = User.create({
-		id: 1
-	});
+  var user = User.create({
+    id: 1
+  });
 
-	user.pull({
+  user.pull({
     mode: "server",
     success: function (model, response, options) {
       t.ok(user.isFetched(),
@@ -556,33 +558,33 @@ test('Pull method on Model.', function (t) {
         }
       });
     },
-		error: function (model, response, options) {
-			options.success();
-		}
-	});
+    error: function (model, response, options) {
+      options.success();
+    }
+  });
 
 });
 
 test('Push method on Model. Create case.', function (t) {
-	t.plan(2);
+  t.plan(2);
 
-	var user = User.create({
-		name: "Nacho"
-	});
+  var user = User.create({
+    name: "Nacho"
+  });
 
-	user.push({
+  user.push({
     success: function (model, response, options) {
       t.ok(!model.isNew(),
         "User has been created remotely.");
       t.ok(!model.hasDirtied("name"),
         "Name is no longer a dirty attribute.");
     },
-		error: function (model, response, options) {
-			options.success({
-				id: 1
-			});
-		}
-	});
+    error: function (model, response, options) {
+      options.success({
+        id: 1
+      });
+    }
+  });
 
 });
 
@@ -638,6 +640,46 @@ test('Push method on Model. Destroy case.', function (t) {
   user2.push({
     error: function (model, response, options) {
       t.fail("No method has to be sent.");
+    }
+  });
+
+});
+
+test('Check method on Model. Server mode.', function (t) {
+  t.plan(2);
+
+  // Remote model
+  var user = User.create({
+    id: 1,
+    version: 1
+  });
+
+  // Lets assume that users have been fetched remotely.
+  user._fetched["server"] = true;
+
+  user.check({
+    success: function (model, response, options) {
+      t.ok(!user.isFetched(options),
+        "User is outdated.");
+
+      user.check({
+        success: function (model, response, options) {
+          t.ok(!user.isFetched(options),
+            "User is still outdated.");
+        },
+        error: function (model, response, options) {
+          options.success({
+            id: 1,
+            version: 2
+          });
+        }
+      });
+    },
+    error: function (model, response, options) {
+      options.success({
+        id: 1,
+        version: 2
+      });
     }
   });
 
@@ -903,4 +945,44 @@ test('Push method on Collection.', function (t) {
 
 });
 
+test('Check method on Collection. Server mode.', function (t) {
+  t.plan(2);
 
+  // Remote model
+  var user = User.create({
+    id: 1,
+    version: 1
+  });
+
+  // Local model
+  var user2 = User.create({
+    id: 2,
+    version: 1
+  });
+
+  // Lets assume that users have been fetched remotely.
+  user._fetched["server"] = true;
+  user2._fetched["server"] = true;
+
+  var users = new Users([user, user2]);
+
+  users.check({
+    success: function (model, response, options) {
+      t.ok(!user.isFetched(options),
+        "User is outdated.");
+
+      t.ok(user2.isFetched(options),
+        "User2 is not outdated.");
+    },
+    error: function (model, response, options) {
+      options.success([{
+        id: 1,
+        version: 2
+      }, {
+        id: 2,
+        version: 1
+      }]);
+    }
+  });
+
+});

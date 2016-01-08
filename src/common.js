@@ -1,4 +1,4 @@
-var Syncer = {
+var Repository = {
   // Default backbone sync function.
 	backboneSync: Backbone.sync,
   /**
@@ -69,4 +69,4 @@ var syncModes = {};
 // Private variable containing defaultMode
 var defaultMode;
 
-Backbone.Syncer = Syncer;
+Backbone.Repository = Repository;

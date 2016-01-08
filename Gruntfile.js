@@ -191,7 +191,7 @@ module.exports = function (grunt) {
 
 	// Default task.
 
-	grunt.registerTask('default', baseTasks.concat(baseLocallyTasks).concat(supermodelTasks).concat(supermodelLocallyTasks));
+	grunt.registerTask('default', baseTasks.concat(baseLocallyTasks));
 
 	// Test task.
 	grunt.registerTask('test', ['concat:baseTest', 'concat:baseLocallyTest', 'tape']);

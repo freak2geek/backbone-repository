@@ -4,7 +4,7 @@ var Backbone = require('backbone'),
 
 Backbone.ajax = najax;
 
-require('../../tmp/backbone.syncer.locally');
+require('../../tmp/backbone-repository-locally');
 
 Backbone.Syncer.storagePrefix = "Test";
 
