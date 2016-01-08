@@ -123,7 +123,7 @@ The server mode uses the Backbone's sync function to perform a remote call again
 The client mode just perform local operations to the model. The success callback is only enabled in this mode.
 
 #### LocalStorage mode (requires Locally extension)
-The LocalStorage mode runs the model operations against LocalStorage. Both the success and error callbacks are allowed in this mode. For working, it requires [Locally plugin](https://github.com/ozantunca/locally) and the backbone-repository-locally version of the library.
+The LocalStorage mode runs the model operations against LocalStorage. Both the success and error callbacks are allowed in this mode. For working, it requires [Locally plugin](https://github.com/ozantunca/locally) and the "backbone-repository-locally" version of the library.
 
 
 #### Custom mode
