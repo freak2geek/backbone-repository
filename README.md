@@ -37,10 +37,12 @@ The library mainly supports the following features:
 - [Reference API](#reference-api)
 	- [Backbone.Repository](#backbonerepository)
   		- [modes](#modes-backbonerepositorymodes)
-  		- [setMode](#setmode-backbonerepositorysetmodename-fn)
   		- [getMode](#getmode-backbonerepositorygetmodename)
-  		- [setDefaultMode](#setdefaultmode-backbonerepositorysetdefaultmodename)
+  		- [setMode](#setmode-backbonerepositorysetmodename-fn)
   		- [getDefaultMode](#getdefaultmode-backbonerepositorygetdefaultmode)
+  		- [setDefaultMode](#setdefaultmode-backbonerepositorysetdefaultmodename)
+  		- [removeMode](#removemode-backbonerepositoryremovemodename)
+  		- [reset](#reset-backbonerepositoryresetname)
 	- [Backbone.Model](#backbonemodel)
       - [create](#create-backbonemodelcreateattrs-options)
       - [find](#find-backbonemodelfindattrs)
@@ -338,27 +340,36 @@ This method meant to be useful using through a **Collection** since you will ver
 #### modes `Backbone.Repository.modes()`
 Returns an array with the name of the available modes.
 
-#### setMode `Backbone.Repository.setMode(name, [fn])`
-Establish a new mode by provinding its name and sync function.
-
-Available parameters:
-* name {String|Object} The mode name or an object containing the name and sync function.
-* fn {Function} The sync function
-
 #### getMode `Backbone.Repository.getMode(name)`
 Returns the sync function of the provided mode.
 
 Available parameters:
 * name {String} The mode name.
 
+#### setMode `Backbone.Repository.setMode(name, [fn])`
+Registers a new mode by provinding its name and sync function.
+
+Available parameters:
+* name {String|Object} The mode name or an object containing the name and sync function.
+* fn {Function} The sync function
+
+#### getDefaultMode `Backbone.Repository.getDefaultMode()`
+Returns the default mode.
+
 #### setDefaultMode `Backbone.Repository.setDefaultMode(name)`
 Establish which mode will be used by default.
 
 Available parameters:
 * name {String} The mode name.
+ 
+#### removeMode `Backbone.Repository.removeMode(name)`
+Removes the sync mode registered.
 
-#### getDefaultMode `Backbone.Repository.getDefaultMode()`
-Returns the default mode.
+Available parameters:
+* name {String} The mode name.
+
+#### reset `Backbone.Repository.reset(name)`
+ Cleans all the sync modes registered.
 
 ### Backbone.Model
 
