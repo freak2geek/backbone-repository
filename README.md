@@ -156,7 +156,7 @@ var user = User.create({id: 1});
 // Specify `storeName` when saving.
 user.save({
 	mode: "localStorage",
-    storeName: "User"
+  storeName: "User"
 });
 ```
 
@@ -207,7 +207,7 @@ user.isFetched(); // false
 ```
 
 #### Dirty attributes state
-The dirty attributes is a hash that keeps the model attributes that have changed since its last sync. For this, the `set` method has been altered and configured to handle dirty changes.
+The dirty attributes is a hash that keeps the model attributes that have changed since its last sync using a sync mode. For this, the `set` method has been altered and configured to handle dirty changes.
 
 ```javascript
 // The 'set' method automatically stores dirtied attributes.
@@ -286,7 +286,7 @@ user.isFetched(); // false, the version has changed.
 ```
 
 ### Sync operations
-Along with predefined sync operations you can perform from a model such as fetch, save and destroy, the extension implements three useful methods: pull, push and check.
+Along with predefined sync operations such as fetch, save and destroy, the extension implements three useful methods: pull, push and check.
 
 By default, all sync operations use the server mode, but it may use another one just by passing the mode as parameter.
 
