@@ -662,4 +662,4 @@ var localstorageSync = function (method, model, options) {
 }
 
 // Registers localstorage mode from the library.
-Repository.register("localStorage", localstorageSync);
+Repository.setMode("localStorage", localstorageSync);

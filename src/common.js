@@ -12,7 +12,7 @@ var Repository = {
    * @param {String|Object} [mode] Mode name or configuration {mode: fn}
    * @param {Function} [fn] Sync method
    */
-  register: function (mode, fn) {
+  setMode: function (mode, fn) {
     if (_.isObject(mode)) {
       _.extend(syncModes, mode);
     } else {
@@ -23,14 +23,14 @@ var Repository = {
    * Unregisters sync modes.
    * @param {String} [mode] Mode name
    */
-  unregister: function (mode) {
+  removeMode: function (mode) {
     delete syncModes[mode];
   },
   /**
    * Get sync mode method.
    * @param {String} [mode] Mode name
    */
-  mode: function (mode) {
+  getMode: function (mode) {
     if (_.isFunction(mode)) {
       return mode;
     }
@@ -38,26 +38,28 @@ var Repository = {
     return syncModes[mode];
   },
   /**
-   * Default mode.
+   * Gets the default mode.
+   */
+  getDefaultMode: function () {
+    return defaultMode;
+  },
+  /**
+   * Sets the default mode.
    * @param {String|Function} [mode] Mode name or fn
    */
-  defaultMode: function (mode) {
-    if (!mode) {
-      return defaultMode;
+  setDefaultMode: function (mode) {
+    if (_.isFunction(mode)) {
+      defaultMode = _.findKey(syncModes, function (value) {
+        return (value === mode);
+      });
     } else {
-      if (_.isFunction(mode)) {
-        defaultMode = _.findKey(syncModes, function (value) {
-          return (value === mode);
-        });
-      } else {
-        defaultMode = mode;
-      }
+      defaultMode = mode;
     }
   },
   /**
    * Resets sync modes.
    */
-  reset: function () {
+  resetModes: function () {
     syncModes = {};
   },
 	VERSION:  '<%= version %>'

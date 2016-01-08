@@ -88,7 +88,7 @@ Backbone.Model = Backbone.Model.extend({
    */
   isFetched: function (options) {
     options || (options = {});
-    _.defaults(options, {mode: Repository.defaultMode()});
+    _.defaults(options, {mode: Repository.getDefaultMode()});
     return this._fetched[options.mode] || false;
   },
 
@@ -104,7 +104,7 @@ Backbone.Model = Backbone.Model.extend({
    */
   dirtiedAttributes: function(options) {
     options || (options = {});
-    _.defaults(options, {mode: Repository.defaultMode()});
+    _.defaults(options, {mode: Repository.getDefaultMode()});
 
     return _.clone(this.dirtied[options.mode]) || {};
   },
@@ -116,7 +116,7 @@ Backbone.Model = Backbone.Model.extend({
    */
   hasDirtied: function (attr, options) {
     options || (options = {});
-    _.defaults(options, {mode: Repository.defaultMode()});
+    _.defaults(options, {mode: Repository.getDefaultMode()});
 
     if (attr == null) return !_.isEmpty(this.dirtied[options.mode]);
     return _.has(this.dirtied[options.mode], attr);
@@ -199,7 +199,7 @@ Backbone.Model = Backbone.Model.extend({
    */
   isDestroyed: function (options) {
     options || (options = {});
-    _.defaults(options, {mode: Repository.defaultMode()});
+    _.defaults(options, {mode: Repository.getDefaultMode()});
     return this._destroyed[options.mode] || false;
   },
 
@@ -208,7 +208,7 @@ Backbone.Model = Backbone.Model.extend({
    */
   fetch: function(options) {
     options || (options = {});
-    _.defaults(options, {mode: Repository.defaultMode()});
+    _.defaults(options, {mode: Repository.getDefaultMode()});
     return previousFetch.apply(this, [options]);
   },
 
@@ -226,7 +226,7 @@ Backbone.Model = Backbone.Model.extend({
     }
 
     options || (options = {});
-    _.defaults(options, {mode: Repository.defaultMode()});
+    _.defaults(options, {mode: Repository.getDefaultMode()});
 
     if(options.patch) {
       options.changes = attrs;
@@ -242,7 +242,7 @@ Backbone.Model = Backbone.Model.extend({
    */
   destroy: function(options) {
     options || (options = {});
-    _.defaults(options, {mode: Repository.defaultMode()});
+    _.defaults(options, {mode: Repository.getDefaultMode()});
 
     var model = this;
     var success = options.success;
@@ -289,7 +289,7 @@ Backbone.Model = Backbone.Model.extend({
    */
   pull: function(options) {
     options || (options = {});
-    _.defaults(options, {mode: Repository.defaultMode()});
+    _.defaults(options, {mode: Repository.getDefaultMode()});
 
     var mode = options.mode;
     if (this.isFetched(options)) {
@@ -336,7 +336,7 @@ Backbone.Model = Backbone.Model.extend({
    */
   check: function(options) {
     options || (options = {});
-    _.defaults(options, {mode: Repository.defaultMode()});
+    _.defaults(options, {mode: Repository.getDefaultMode()});
 
     var url = options.checkUrl || _.result(this, 'checkUrl');
     if (!url) {
@@ -488,7 +488,7 @@ Backbone.Collection = Backbone.Collection.extend({
    */
   fetch: function(options) {
     options = _.extend({parse: true}, options);
-    _.defaults(options, {mode: Repository.defaultMode()});
+    _.defaults(options, {mode: Repository.getDefaultMode()});
 
     return prevFetchCollection.apply(this, [options]);
   },
@@ -501,7 +501,7 @@ Backbone.Collection = Backbone.Collection.extend({
    */
   save: function(options) {
     options || (options = {});
-    _.defaults(options, {mode: Repository.defaultMode()});
+    _.defaults(options, {mode: Repository.getDefaultMode()});
 
     var success = options.success;
     options.originalSuccess = options.success;
@@ -525,7 +525,7 @@ Backbone.Collection = Backbone.Collection.extend({
    */
   destroy: function(options) {
     options || (options = {});
-    _.defaults(options, {mode: Repository.defaultMode()});
+    _.defaults(options, {mode: Repository.getDefaultMode()});
 
     var success = options.success;
     options.originalSuccess = options.success;
@@ -547,7 +547,7 @@ Backbone.Collection = Backbone.Collection.extend({
    */
   pull: function(options) {
     options || (options = {});
-    _.defaults(options, {mode: Repository.defaultMode()});
+    _.defaults(options, {mode: Repository.getDefaultMode()});
 
     var success = options.success;
 
@@ -598,7 +598,7 @@ Backbone.Collection = Backbone.Collection.extend({
    */
   check: function(options) {
     options || (options = {});
-    _.defaults(options, {mode: Repository.defaultMode()});
+    _.defaults(options, {mode: Repository.getDefaultMode()});
 
     var url = options.checkUrl || _.result(this, 'checkUrl');
     if (!url) {
@@ -627,7 +627,7 @@ var sync = function (method, model, options) {
   wrapSuccess(method, model, options);
 
   if (mode) {
-    var syncFn = Repository.mode(mode);
+    var syncFn = Repository.getMode(mode);
 
     if (syncFn) {
       return syncFn.apply(options.context, [method, model, options]);
@@ -853,10 +853,10 @@ var syncMode = {
 };
 
 // Registers syncModes from the library.
-Repository.register(syncMode);
+Repository.setMode(syncMode);
 
 // Establish default mode.
-Repository.defaultMode("server");
+Repository.setDefaultMode("server");
 
 // Replaces the previous Backbone.sync method by the Repository's one.
 Backbone.sync = sync;
