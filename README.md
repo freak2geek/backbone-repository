@@ -164,7 +164,7 @@ You may also specify an `storagePrefix` for all your models when persisting in L
  
  ```javascript
 // Specify `storagePrefix`.
-Backbone.storagePrefix = "MyPrefix"; 
+Backbone.Repository.storagePrefix = "MyPrefix"; 
 ```
 
 Finally, the LocalStorage key will read as follows: storagePrefix:storeName:[id|localId].
@@ -206,6 +206,15 @@ user.fetch({
 user.isFetched(); // false
 ```
 
+You may pass the sync mode against you want to check. By default, it will check against the server mode.
+
+```javascript
+// Checking against localStorage mode.
+user.isFetched({
+  mode: "localStorage"
+});
+```
+
 #### Dirty attributes state
 The dirty attributes is a hash that keeps the model attributes that have changed since its last sync using a sync mode. For this, the `set` method has been altered and configured to handle dirty changes.
 
@@ -233,6 +242,8 @@ user.set({
 
 user.hasDirtied(); // false
 ```
+You may pass the sync mode against you want to check. By default, it will check against the server mode.
+
 #### Dirty destroy state
 The dirty destroy state means whether the model has been destroyed locally or not.
 
@@ -256,6 +267,14 @@ user.destroy({
 });
 
 user.isDestroyed(); // false
+```
+You may pass the sync mode against you want to check. By default, it will check against the server mode.
+
+```javascript
+// Checking against localStorage mode.
+user.isDestroyed({
+  mode: "localStorage"
+}); // false
 ```
 
 #### Version attribute
