@@ -114,7 +114,7 @@ A sync mode is responsible to provide logic to access to different data sources.
 For using a mode, you must pass the mode as an option for every single sync operation, whether fetch, update, destroy, pull, push or check.
 
 ```javascript
-// E.g. fetching operation from server mode
+// E.g. fetching operation using the server mode
 user.fetch({
   mode: "server"
 });
@@ -124,7 +124,7 @@ user.fetch({
 The server mode uses the Backbone's sync function to perform a remote call against a REST API. It is the mode executed by default when using the model manager methods. Both the success and error callbacks are allowed in this mode.
 
 ```javascript
-// E.g. saving operation from server mode
+// E.g. saving operation using the server mode
 user.save(null, {
   mode: "server"
 });
@@ -134,7 +134,7 @@ user.save(null, {
 The client mode just perform local operations to the model. The success callback is only enabled in this mode.
 
 ```javascript
-// E.g. destroying operation from client mode
+// E.g. destroying operation using the client mode
 user.destroy({
   mode: "client"
 });
