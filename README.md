@@ -123,8 +123,22 @@ user.fetch({
 #### Server mode
 The server mode uses the Backbone's sync function to perform a remote call against a REST API. It is the mode executed by default when using the model manager methods. Both the success and error callbacks are allowed in this mode.
 
+```javascript
+// E.g. saving operation from server mode
+user.save(null, {
+  mode: "server"
+});
+```
+
 #### Client mode
 The client mode just perform local operations to the model. The success callback is only enabled in this mode.
+
+```javascript
+// E.g. destroying operation from client mode
+user.destroy({
+  mode: "client"
+});
+```
 
 #### LocalStorage mode (requires Locally extension)
 The LocalStorage mode runs the model operations against LocalStorage. Both the success and error callbacks are allowed in this mode. For working, it requires [Locally plugin](https://github.com/ozantunca/locally) and the "backbone-repository-locally" version of the library.
