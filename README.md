@@ -1,7 +1,5 @@
 # backbone-repository
 
-**The module is under development. It will be available soon.**
-
 Backbone extension that implements purposes of the Repository pattern, which means the enhancement of the model management and synchronization, so as to provide strong features to build online, offline and hybrid web applications.
 
 ![enter image description here](http://s30.postimg.org/xzax33qxt/diagrama_Con_Registro.png)
@@ -43,6 +41,8 @@ The library mainly supports the following features:
   		- [setDefaultMode](#setdefaultmode-backbonerepositorysetdefaultmodename)
   		- [removeMode](#removemode-backbonerepositoryremovemodename)
   		- [reset](#reset-backbonerepositoryresetname)
+  		- [storagePrefix](#storageprefix-backbonerepositorystorageprefix)
+  		- [compressStorage](#compressstorage-backbonerepositorycompressstorage)
 	- [Backbone.Model](#backbonemodel)
       - [create](#create-backbonemodelcreateattrs-options)
       - [find](#find-backbonemodelfindattrs)
@@ -60,12 +60,14 @@ The library mainly supports the following features:
       - [push](#push-modelpushoptions)
       - [checkUrl](#checkurl-modelcheckurl)
       - [check](#check-modelcheckoptions)
+      - [storeName](#storename-modelstorename)
 	- [Backbone.Collection](#backbonecollection)
       - [save](#save-collectionsaveattrs-options)
       - [destroy](#destroy-collectiondestroyoptions)
       - [pull](#pull-collectionpulloptions)
       - [push](#push-collectionpushoptions)
       - [check](#check-collectioncheckoptions)
+      - [storeName](#storename-collectionstorename)
 - [Building and Testing](#building-and-testing)
 	- [Building](#building)
 	- [Testing](#testing)
@@ -126,6 +128,32 @@ The client mode just perform local operations to the model. The success callback
 
 #### LocalStorage mode (requires Locally extension)
 The LocalStorage mode runs the model operations against LocalStorage. Both the success and error callbacks are allowed in this mode. For working, it requires [Locally plugin](https://github.com/ozantunca/locally) and the "backbone-repository-locally" version of the library.
+
+For using this mode, you must specify an `storeName` whether in the model definition or by parameter when saving.
+
+```javascript
+// Specify `storeName` in the model definition.
+var User = Backbone.Model.extend({
+  storeName: "User"
+});
+
+var user = User.create({id: 1});
+
+// Specify `storeName` when saving.
+user.save({
+	mode: "localStorage",
+    storeName: "User"
+});
+```
+
+You may also specify an `storagePrefix` for all your models when persisting in LocalStorage.
+ 
+ ```javascript
+// Specify `storagePrefix`.
+Backbone.storagePrefix = "MyPrefix"; 
+```
+
+Finally, the LocalStorage key will read as follows: storagePrefix:storeName:[id|localId].
 
 
 #### Custom mode
@@ -369,7 +397,13 @@ Available parameters:
 * name {String} The mode name.
 
 #### reset `Backbone.Repository.reset(name)`
- Cleans all the sync modes registered.
+Cleans all the sync modes registered.
+ 
+#### storagePrefix `Backbone.Repository.storagePrefix`
+The prefix used in all storages. Requires [Locally extension](https://github.com/ozantunca/locally).
+
+#### compressStorage `Backbone.Repository.compressStorage`
+Wheter to use Locally compression by default or not. Requires [Locally extension](https://github.com/ozantunca/locally).
 
 ### Backbone.Model
 
@@ -426,7 +460,7 @@ Alters set method to provide new options.
 Available parameters:
 * options.dirty {Boolean} [dirty=true] Whether to handle dirtied changes or not.
 * options.version {Boolean} [version=true] Whether to handle version changes or not.
-* options.localStorage {Boolean} [localStorage= true] Forces to save the model in LocalStorage. (requires Locally extension)
+* options.localStorage {Boolean} [localStorage= true] Forces to save the model in LocalStorage. Requires [Locally extension](https://github.com/ozantunca/locally).
 
 #### isDestroyed `model.isDestroyed([options])`
 Returns `true` if this model has been destroyed remotely, `false` otherwise.
@@ -455,6 +489,9 @@ Fetches version attribute of the model and checks the uptodate status.
 Available parameters:
 * options.mode {String} [mode=defaultMode] The sync mode name.
 * options.checkUrl {String} The checking endpoint in the server mode.
+
+#### storeName `model.storeName`
+The storage key for persisting the model. Requires [Locally extension](https://github.com/ozantunca/locally).
 
 ### Backbone.Collection
 
@@ -489,6 +526,9 @@ Available parameters:
 * options.mode {String} [mode=defaultMode] The sync mode name.
 * options.checkUrl {String} The checking endpoint in the server mode.
 
+#### storeName `collection.storeName`
+The storage key for persisting the collection. Requires [Locally extension](https://github.com/ozantunca/locally).
+
 ## Building and Testing
 First install locally all the required development dependencies.
 ```bash
@@ -496,8 +536,15 @@ npm install
 ```
 
 ### Building
+
+#### backbone-repository
 ```bash
-grunt
+grunt base
+```
+
+#### backbone-repository-locally
+```bash
+grunt baseLocally
 ```
 
 ### Testing
