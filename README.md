@@ -154,7 +154,7 @@ var User = Backbone.Model.extend({
 var user = User.create({id: 1});
 
 // Specify `storeName` when saving.
-user.save({
+user.save(null, {
 	mode: "localStorage",
 	storeName: "User"
 });
