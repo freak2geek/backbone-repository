@@ -423,7 +423,7 @@ var users = new Users([user, user2]);
 users.check({
 	mode: "server",
     success: function (collection, response, options) {
-    	// Lets assume a new version is available for only the user one,        
+    	// Lets assume a new version is only available for the user one,        
         // then the user one is about to be fetched again.
         user.isFetched(); // false
 		user2.isFetched(); // true
