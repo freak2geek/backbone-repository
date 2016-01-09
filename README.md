@@ -212,7 +212,7 @@ user.isFetched({
 ```
 
 #### Dirty attributes state
-The dirty attributes is a hash that keeps the model attributes that have changed since its last sync for each existing sync modes. The hash will be progressively emptying as attributes are sucessfully synchronized against each sync mode.
+The dirty attributes is a hash that keeps the model attributes that have changed since its last sync for each existing sync mode. The hash will be progressively emptying as attributes are sucessfully synchronized against each sync mode.
 
 For implementing this, the `set` method has been altered and configured to handle dirty changes.
 
@@ -223,7 +223,7 @@ user.set({
 }); 
 ```
 
-Both `dirtiedAttributes` and `hasDirtied` methods, are possible to pass the sync mode against you wish to check as an option. By default, it will check against the server mode.
+Both `dirtiedAttributes` and `hasDirtied` methods are possible to pass the sync mode against you wish to check as an option. By default, it will check against the server mode.
 
 ```javascript
 user.hasDirtied({
