@@ -102,9 +102,9 @@ Besides, collections will rely on the factory method to create the instances of 
 
 ```javascript
 var Users = Backbone.Collection.extend({
-  model: function(attrs, options) {
-      return User.create(attrs, options);
-  } 
+	model: function(attrs, options) {
+		return User.create(attrs, options);
+	} 
 });
 ```
 
@@ -116,7 +116,7 @@ For using a mode, you must pass the mode as an option for every single sync oper
 ```javascript
 // E.g. fetching operation using the server mode
 user.fetch({
-  mode: "server"
+	mode: "server"
 });
 ```
 
@@ -126,7 +126,7 @@ The server mode uses the Backbone's sync function to perform a remote call again
 ```javascript
 // E.g. saving operation using the server mode
 user.save(null, {
-  mode: "server"
+	mode: "server"
 });
 ```
 
@@ -136,7 +136,7 @@ The client mode just perform local operations to the model. The success callback
 ```javascript
 // E.g. destroying operation using the client mode
 user.destroy({
-  mode: "client"
+	mode: "client"
 });
 ```
 
@@ -148,7 +148,7 @@ For using this mode, you must specify an `storeName` whether in the model defini
 ```javascript
 // Specify `storeName` in the model definition.
 var User = Backbone.Model.extend({
-  storeName: "User"
+	storeName: "User"
 });
 
 var user = User.create({id: 1});
@@ -156,7 +156,7 @@ var user = User.create({id: 1});
 // Specify `storeName` when saving.
 user.save({
 	mode: "localStorage",
-  storeName: "User"
+	storeName: "User"
 });
 ```
 
@@ -175,15 +175,15 @@ The extension features a way to configure your custom sync modes.
 
 ```javascript
 var syncStrategy = function (method, model, options) {
-  // sync function logic
+    // sync function logic
 };
 
 // Registers a new sync mode.
 Backbone.Repository.setMode({
-  mySyncMethod: syncStrategy
+    mySyncMethod: syncStrategy
 });
 ```
-It is also possible to establish which mode will be selected by default.
+It is also possible to establish which mode will be selected by default when none selected.
 
 ```javascript
 // Defaults a sync mode.
@@ -194,40 +194,45 @@ Backbone.Repository.setDefaultMode("mySyncMethod");
 The model prototype has been expanded to work up the Repository features intented.
 
 #### Fetch state
-The fetch state means whether the model has been fetched against the sync mode or not.
+The fetch state means whether the model has been fetched using a sync mode or not. It is possible to pass the sync mode against you wish to check as an option. By default, it will check against the server mode.
+
 ```javascript
 user.fetch({
-  mode: "server",
-    success: function (model, response, options) {
-    	user.isFetched(); // true
+    mode: "server",
+	success: function (model, response, options) {
+		user.isFetched({
+			mode: "server"
+        }); // true
 	}
 });
 
-user.isFetched(); // false
-```
-
-You may pass the sync mode against you want to check. By default, it will check against the server mode.
-
-```javascript
-// Checking against localStorage mode.
 user.isFetched({
-  mode: "localStorage"
-});
+	mode: "server"
+}); // false
 ```
 
 #### Dirty attributes state
-The dirty attributes is a hash that keeps the model attributes that have changed since its last sync using a sync mode. For this, the `set` method has been altered and configured to handle dirty changes.
+The dirty attributes is a hash that keeps the model attributes that have changed since its last sync for each existing sync modes. The hash will be progressively emptying as attributes are sucessfully synchronized against each sync mode.
+
+For implementing this, the `set` method has been altered and configured to handle dirty changes.
 
 ```javascript
 // The 'set' method automatically stores dirtied attributes.
-// same happens to user.save({name: "Nacho"}, {mode: "client"});
 user.set({
-    name: "Nacho"
+	name: "Nacho"
 }); 
+```
 
-user.hasDirtied(); // true
+Both `dirtiedAttributes` and `hasDirtied` methods, are possible to pass the sync mode against you wish to check as an option. By default, it will check against the server mode.
 
-user.dirtiedAttributes(); // outputs {name: "Nacho"}
+```javascript
+user.hasDirtied({
+	mode: "server"
+}); // true
+
+user.dirtiedAttributes({
+	mode: "server"
+}); // outputs {name: "Nacho"}
 ```
 
 The dirty handler may be turned off by passing dirty option to `set` method.
@@ -235,45 +240,42 @@ The dirty handler may be turned off by passing dirty option to `set` method.
 ```javascript
 // The 'set' method won't store dirtied attributes.
 user.set({
-    name: "Nacho"
+	name: "Nacho"
 }, {
-  dirty: false
+	dirty: false
 });
 
-user.hasDirtied(); // false
+user.hasDirtied({
+	mode: "server"
+}); // false
 ```
-You may pass the sync mode against you want to check. By default, it will check against the server mode.
 
 #### Dirty destroy state
 The dirty destroy state means whether the model has been destroyed locally or not.
 
 ```javascript
 user.destroy({
-  mode: "client"
+	mode: "client"
 });
 
 user.isDirtyDestroyed(); // true
 ```
 
 #### Destroy state
-The destroy state means whether the model has been destroyed against a sync mode or not.
+The destroy state means whether the model has been destroyed using a sync mode or not. It is possible to pass the sync mode against you wish to check as an option. By default, it will check against the server mode.
 
 ```javascript
 user.destroy({
-  mode: "server",
-    success: function (model, response, options) {
-      user.isDestroyed(); // true
-    }
+	mode: "server",
+	success: function (model, response, options) {
+		user.isDestroyed({
+        	mode: "server"
+        }); // true
+	}
 });
 
-user.isDestroyed(); // false
-```
-You may pass the sync mode against you want to check. By default, it will check against the server mode.
-
-```javascript
-// Checking against localStorage mode.
 user.isDestroyed({
-  mode: "localStorage"
+	mode: "server"
 }); // false
 ```
 
@@ -282,7 +284,7 @@ The version state is an attribute configured for each model. It is useful to sta
 
 ```javascript
 var User = Backbone.Model.extend({
-  versionAttribute: "version"
+	versionAttribute: "version"
 });
 ```
 
@@ -290,15 +292,15 @@ When calling some operation that uses `set` method, you are enabled to check if 
 
 ```javascript
 var user = User.create({
-  version: 1
+	version: 1
 });
 
 user.isFetched(); // true, lets suppose that the model is fetched
 
 user.set({
-  version: 2
+	version: 2
 }, {
-  version: true // forces to check version status
+	version: true // forces to check version status
 });
 
 user.isFetched(); // false, the version has changed.
@@ -315,14 +317,23 @@ Besides, all sync operations has been adapted to be used from Collection.
 The pull method performs a read request only if the model has not been fetched before.
 
 ```javascript
-var user = User.create({
-  id: 1
-});
+var user = User.create({id: 1});
 
-// Performs a sync call in its first fetching.
+user.isFetched(); // false
+
+// Performs a sync call on its first fetching, such as fetch.
 user.pull({
-	mode: "server"
+	mode: "server",
+    success: function (model, response, options) {
+    	user.isFetched(); // true
+    }
 });
+```
+
+Once the model has been fetched, the `pull` method won't request it again. However, the `success` callback will be executed.
+
+``` javascript
+user.isFetched(); // true
 
 // It won't request since it was fetched before.
 user.pull({
@@ -336,28 +347,30 @@ The push method performs a request whether create, update or destroy methods acc
 ```javascript
 // Create example
 var user = User.create({
-  name: "Nacho"
+	name: "Nacho"
 });
 
 // A create request will be emitted.
 user.push({
 	mode: "server"
 });
-
+```
+```javascript
 // Update example
 user = User.create({
-  id: 1,
-  name: "Nacho"
+	id: 1,
+	name: "Nacho"
 });
 
 // An update request will be emitted.
 user.push({
 	mode: "server"
 });
-
+```
+```javascript
 // Destroy example
 user.destroy({
-  mode: "client"
+	mode: "client"
 });
 
 // A destroy request will be emitted.
@@ -372,7 +385,7 @@ The check method is devised to fetch only the model version attribute and check 
 ```javascript
 var User = Backbone.Model.extend({
   versionAttribute: "version",
-  checkUrl: "A_CHECKING_ENDPOINT"
+  checkUrl: "A_CHECKING_ENDPOINT_FOR_MODEL"
 });
 
 var user = User.create({
@@ -393,6 +406,30 @@ user.check({
 });
 ```
 This method meant to be useful using through a **Collection** since you will verify the models all at once.
+```javascript
+var Users = Backbone.Collection.extend({
+	checkUrl: "A_CHECKING_ENDPOINT_FOR_COLLECTION"
+});
+
+var user = User.create({id: 1, version: 1});
+var user2 = User.create({id: 2, version: 1});
+
+// Assuming that models are already fetched.
+user.isFetched(); // true
+user2.isFetched(); // true
+
+var users = new Users([user, user2]);
+
+users.check({
+	mode: "server",
+    success: function (collection, response, options) {
+    	// Lets assume a new version is available for only the user one,        
+        // then the user one is about to be fetched again.
+        user.isFetched(); // false
+		user2.isFetched(); // true
+    }
+});
+```
 
 ## Reference API
 
