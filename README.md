@@ -8,7 +8,8 @@ The library mainly supports the following features:
 
 * **Model register**: A *Collection* (C) keeps models instantiated.
 * **Sync modes**: *Sync modes* (m) are sync functions to different data sources that are managed by a *Repository* (R).
-* **Sync state and operations**: A *Model* (M) keeps changes not synchronized and run sync operations using a sync mode.
+* **Sync state**: A *Model* (M) keeps changes not synchronized for each sync mode defined. 
+* **Sync operations**: A *Model* (M) runs operations (fetch, save, destroy, pull, push and check) on different sync modes.
 
 ## Versions
 * **backbone-repository** - core library.
@@ -549,6 +550,7 @@ Pushes the changes performed to the model using the sync mode selected. It may e
 
 Available parameters:
 * options.mode {String} [mode=defaultMode] The sync mode name.
+* options.patch {Boolean} Use patch request when updating.
 
 #### checkUrl `model.checkUrl`
 The checking endpoint in the server mode.
@@ -588,6 +590,7 @@ Pushes the changes of the whole collection using the sync mode. The server mode 
 
 Available parameters:
 * options.mode {String} [mode=defaultMode] The sync mode name.
+* options.patch {Boolean} Use patch request when updating.
 
 #### check `collection.check([options])`
 Checks the whole collection using the sync mode.
